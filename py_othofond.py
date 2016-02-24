@@ -4,7 +4,7 @@
 import xlrd
 import re
 
-inpfile="G:/py_fond/ex1f.xlsx"
+inpfile="D:/ex1f.xlsx"
 
 rb=xlrd.open_workbook(inpfile)
 sheet=rb.sheet_by_index(0)
@@ -54,15 +54,15 @@ def names_donors():
     u"""
     обрабатываем имена жертвователей
     """
-    for irow in range(11+1,sheet.nrows-1):
+    for irow in range(sheet.nrows-2,11+1,-1): #(11+1,sheet.nrows-1)
         if sheet.row_values(irow)[8]!='':
             if len(sheet.row_values(irow)[4].split('//'))==5:
             #print irow, sheet.row_values(irow)[4],len(sheet.row_values(irow)[4].split('//'))
-                print irow, anonim_name(sheet.row_values(irow)[4].split('//')[1]),'\t',sheet.row_values(irow)[8]
+                print irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[1]),'\t',sheet.row_values(irow)[8]
             elif len(sheet.row_values(irow)[4].split('//'))==3:
-                print irow, anonim_name(sheet.row_values(irow)[4].split('//')[0]),'\t',sheet.row_values(irow)[8]
+                print irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[0]),'\t',sheet.row_values(irow)[8]
             else:
-                print irow, sheet.row_values(irow)[4],len(sheet.row_values(irow)[4].split('//')),sheet.row_values(irow)[8]
+                print irow,sheet.row_values(irow)[1], sheet.row_values(irow)[4],len(sheet.row_values(irow)[4].split('//')),sheet.row_values(irow)[8]
 
 
 

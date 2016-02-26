@@ -5,6 +5,7 @@ import xlrd
 import re
 
 inpfile="D:/ex1f.xlsx"
+outfile="D:/outfond.txt"
 
 rb=xlrd.open_workbook(inpfile)
 sheet=rb.sheet_by_index(0)
@@ -47,22 +48,37 @@ def anonim_name(full_name):
     анонимизируем имя из банка
     """
     fn=full_name.split()
-    return fn[1]+' '+fn[2]+' '+fn[0][0]+'.'
+    outfn=fn[1]+' '+fn[2]+' '+fn[0][0]+'.'
+    return outfn
 
 
 def names_donors():
     u"""
     обрабатываем имена жертвователей
     """
+    f=open(outfile,'w')
+    f.write(r'<ul>'+'\n\t'+r'<li style="list-style-type: none;">'+'\n\t\t'+r'<table border="1" style="width: 100%;">'+'\n\t\t\t'+r'<tbody>'+'\n')
     for irow in range(sheet.nrows-2,11+1,-1): #(11+1,sheet.nrows-1)
         if sheet.row_values(irow)[8]!='':
             if len(sheet.row_values(irow)[4].split('//'))==5:
             #print irow, sheet.row_values(irow)[4],len(sheet.row_values(irow)[4].split('//'))
-                print irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[1]),'\t',sheet.row_values(irow)[8]
+                print '{0}\t{1}\t{2}\t{3}'.format(irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[1]).encode('cp1251'),sheet.row_values(irow)[8])
+                f.write('\t\t\t'+r'<tr>'+'\n')
+                f.write('\t\t\t<td>{1}</td>\t<td>{2}</td>\t<td>{3}</td>\n'.format(irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[1]).encode('cp1251'),sheet.row_values(irow)[8]))
+                f.write('\t\t\t'+r'</tr>'+'\n')
             elif len(sheet.row_values(irow)[4].split('//'))==3:
-                print irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[0]),'\t',sheet.row_values(irow)[8]
+                print irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[0]).encode('cp1251'),'\t',sheet.row_values(irow)[8]
+                f.write('\t\t\t'+r'<tr>'+'\n')
+                f.write('\t\t\t<td>{1}</td>\t<td>{2}</td>\t<td>{3}</td>\n'.format(irow,sheet.row_values(irow)[1], anonim_name(sheet.row_values(irow)[4].split('//')[0]).encode('cp1251'),sheet.row_values(irow)[8]))
+                f.write('\t\t\t'+r'</tr>'+'\n')
             else:
                 print irow,sheet.row_values(irow)[1], sheet.row_values(irow)[4],len(sheet.row_values(irow)[4].split('//')),sheet.row_values(irow)[8]
+                f.write('\t\t\t'+r'<tr>'+'\n')
+                f.write('\t\t\t<td>{1}</td>\t<td>{2}</td>\t<td>{4}</td>\n'.format(irow,sheet.row_values(irow)[1], sheet.row_values(irow)[4].encode('cp1251'),len(sheet.row_values(irow)[4].split('//')),sheet.row_values(irow)[8]))
+                f.write('\t\t\t'+r'</tr>'+'\n')
+    f.write('\t\t'+r'</tbody>'+'\n\t'+r'</table></li>'+'\n'+r'</ul>')
+    f.close()
+
 
 
 

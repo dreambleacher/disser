@@ -43,12 +43,12 @@ u'SG_CfResL1':[1.,2.5],
 u'SG_CfResL2':[1.,2.5],
 u'SG_CfResL3':[1.,2.5],
 u'SG_CfResL4':[1.,2.5],
-u'YhqCor1_eqf':[0,5],
-u'YhqCor2_eqf':[0,5],
-u'YhqCor3_eqf':[0,5]
+u'YhqCor1_eqf':[0.,5.],
+u'YhqCor2_eqf':[0.,5.],
+u'YhqCor3_eqf':[0.,5.]
 }
 
-
+mod_coef_delta_m=np.array([mod_coef_delta[p] for p in mod_coef])
 
 yexpvar=[
 'Tgor1',

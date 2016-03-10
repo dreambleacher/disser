@@ -7,6 +7,7 @@ from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
+#from disser.def_vars import *
 
 rc('font', **{'family': 'verdana'})
 rc('text.latex', unicode=True)
@@ -261,7 +262,7 @@ def JAC_from_arch(vkey):
             plt.ylim((out_data.ix[qq.index][kk].mean()-deriv_test[kk],out_data.ix[qq.index][kk].mean()+deriv_test[kk]))
             der[kk]=0
         else:
-            print 'index\tmax-min из всех знач\tmaxn-minn из якобиантн знач\tконстанта отсечения погрешности'
+            print u'index\tmax-min из всех знач\tmaxn-minn из якобиантн знач\tконстанта отсечения погрешности'
             print kk,'\t',out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',deriv_test[kk]
             #производная по максимальным точкам:
             deriv1old=[(out_data.ix[qqn.index][kk].iloc[qqn[vkey].shape[0]-1]-out_data.ix[qqn.index][kk].iloc[0])/(qqn[vkey].iloc[qqn[vkey].shape[0]-1]-qqn[vkey].iloc[0])]
@@ -299,6 +300,9 @@ def jac_2_matrix(jac):
         print jj,masinp
     mas=np.array(mas)
     return mas  # mas - матрица якобиана в виде np.array, строки, столбцы -yexpvar,mod_coef
+
+jac=all_JAC()
+mas=jac_2_matrix(jac)
 
 def test():
     u"""Проверили правильность якобиана, все ок
@@ -385,14 +389,18 @@ def boundX(x):
     u"""
     ограничиваем Х
     """
-    for i,xx in enumerate(x):
+    rel_err=np.zeros(x.shape)
+    nx=x
+    for i,xx in enumerate(nx):
         if xx<mod_coef_delta_m[i][0]:
-            x[i]=mod_coef_delta_m[i][0]
+            nx[i]=mod_coef_delta_m[i][0]
             print 'out of bound',i,xx,r'<',mod_coef_delta_m[i][0]
+            rel_err[i]=mod_coef_delta_m[i][0]-xx
         elif xx>mod_coef_delta_m[i][1]:
-            x[i]=mod_coef_delta_m[i][1]
+            nx[i]=mod_coef_delta_m[i][1]
             print 'out of bound',i,xx,r'>',mod_coef_delta_m[i][1]
-    return x
+            rel_err[i]=xx-mod_coef_delta_m[i][0]
+    return nx,rel_err
 
 def y_fr_model():
     u"""
@@ -410,8 +418,25 @@ def y_fr_model():
     yexp1=np.array([arch_var[x] for x in yexpvar])
     return yexp1
 
+y_from_model_mas=y_fr_model() # для ускорения считаем только 1 раз
 
-def f4minimise(x):
+def Ppg_popravka(ppgpravk):
+    u"""
+    Вводим аддитивную поправку на давления парогенераторов.
+    !Учесть, что при замене массива параметров номер в массиве поменяется!
+    """
+    global y_from_model_mas
+    y_from_model_mas_prav=y_from_model_mas.copy()
+    y_from_model_mas_prav[24]+=ppgpravk
+    y_from_model_mas_prav[23]+=ppgpravk
+    y_from_model_mas_prav[22]+=ppgpravk
+    y_from_model_mas_prav[21]+=ppgpravk
+    return y_from_model_mas_prav
+
+
+
+
+def f4minimise(x,xaddppg):
     u"""
     Функция для минимизации в методе наименьших квадратов
     минимизирует разницу между между экспериментальным значением датчиков и датчиками модели, настраивыми по изменению параметров модели
@@ -420,8 +445,9 @@ def f4minimise(x):
     dx=x-x0 - входной параметр
     x0 и y0 некоторые начальные значения из модели (по ним строили якобиан)
     """
-    yexp1=y_fr_model()
-    minimize_polinomial=(yexp1-y0m-np.dot(mas.T,x-x0m))
+    yexp1=Ppg_popravka(xaddppg)
+    yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
+    minimize_polinomial=(yexp1-y0m-np.dot(mas.T,x-x0m))/yexperr
     return minimize_polinomial
 
 def f4minimise_buf(dxnorm):
@@ -429,14 +455,30 @@ def f4minimise_buf(dxnorm):
     первая буферная функция для минимизации которая берет dxnorm а не x
     """
     global shag
+    global s_sum
     print '_________________________________________________________________'
     print u"ШАГ ",shag
     print 'vector dxnorm-',dxnorm
-    dx=normolizeX_ob(dxnorm) #перевели в ненормированный вид
+    dx=normolizeX_ob(dxnorm[:-1]) #перевели в ненормированный вид
+    xaddppg=dxnorm[-1]#последний с конца элемент - аддитивная поправка давлений на выходе из ПГ)
+    print 'vector dx-',dx
     x=dx2x(dx) #перевели от изменений к Х
-    xbounded=boundX(x) #отсекли изменения сверх предела
-    minimize_polinomial=f4minimise(xbounded)
+    print 'vector x-',x
+    xbounded,rel_x=boundX(x) #отсекли изменения сверх предела
+    reln_x=normolizeX(rel_x) #Нормализуем отклонение от границ параметров
+    k_bounded=1+reln_x.sum()/1000. #множитель увеличивающийся с отклонением от границ параметров
+    print u"множитель к баунд=",k_bounded
+    print u"поправка к P ПГ=",xaddppg
+    minimize_polinomial=f4minimise(xbounded,xaddppg)*k_bounded#*k_bounded
     shag+=1
+    #вводим поправку на отклонение коэффициентов друг от друга
+    xotklmas=[x[0]-x[1],x[0]-x[2],x[0]-x[3]]
+    minimize_polinomial=np.append(minimize_polinomial,xotklmas)
+    print "result of min func = ",minimize_polinomial
+    s_sum_t=0 #сумма квадратов текущего вывода функции отклонения
+    for e in minimize_polinomial: s_sum_t+=e*e
+    s_sum.append(s_sum_t) #массив общего расчета вывода функций отклонения
+    print "sum of sqr func= ",s_sum_t
     return minimize_polinomial
 
 
@@ -448,16 +490,20 @@ def lsqmas():
     u"""находим решение A(jac)x(param)-b(yexp)-min
     """
     global shag
-    dx0=np.zeros(len(mod_coef)) #отправная точка решения - все отклонения - нули
+    dx0=np.zeros(len(mod_coef)+1) #отправная точка решения - все отклонения - нули
+    s_sum=[]
     shag=1
     #ssnp=np.linalg.lstsq(mas.T,yexp1-y0m) #решение
     #ssfort=scipy.optimize.nnls(mas.T,yexp1-y0m)
     #sslsqscypy=scipy.optimize.leastsq(funk_fr_jac,mod_coef_delt)#np.array([inp_data.iloc[0][x] for x in mod_coef])
-    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.1)
+    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,factor=0.1,ftol=0.01,xtol=0.01,full_output=1)
     ss=sslsqscypy
     np.set_printoptions(suppress=True,precision=3,edgeitems=10)
     print mod_coef
-    print 'solve-',ss[0]
+    print 'solve dxnorm-',ss[0]
+    print 'solve dx-',normolizeX_ob(ss[0][:-1])
+    print 'solve x-',dx2x(normolizeX_ob(ss[0][:-1]))
+    print 'Ppgadd -',ss[0][-1]
     for pp in mod_coef:
         print inp_data.iloc[0][pp],
     #проверка:

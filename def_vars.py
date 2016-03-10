@@ -50,6 +50,23 @@ u'YhqCor3_eqf':[0.,5.]
 
 mod_coef_delta_m=np.array([mod_coef_delta[p] for p in mod_coef])
 
+vh_param=[
+'N',
+'Pgpk',
+'tpvd1',
+'tpvd2',
+'Paz',
+]
+
+
+vh_delt=dict(
+N=[94.,104.],
+Pgpk=[59.5,61.5],
+Paz=[158.5,160.],
+tpvd1=[200.,220.],
+tpvd2=[200.,220.])
+
+
 yexpvar=[
 'Tgor1',
 'Tgor2',
@@ -128,7 +145,15 @@ u'ppvd2':0.1,
 u'tpvd1':0.1,
 u'tpvd2':0.1}
 
-
+arch_var_deviation=dict(
+    Tgor1=5.,Tgor2=5.,Tgor3=5.,Tgor4=5.,
+    Thol1=3.,Thol2=3.,Thol3=3.,Thol4=3.,
+    dPgcn1=0.005*10.197,dPgcn2=0.005*10.197,dPgcn3=0.005*10.197,dPgcn4=0.005*10.197,
+    Pzone1=0.11*10.197,Pzone2=0.,
+    Ntep=0.,Naz=0.,Nrr=0.,N1k=0.,N2k=0.,Naknp=0.,Nturb=0.,
+    Tpv1=2.2,Tpv2=2.2,Tpv3=2.2,Tpv4=2.2,
+    Gpv1=97.,Gpv2=97.,Gpv3=97.,Gpv4=97.,
+    Ppg1=0.07*10.197,Ppg2=0.07*10.197,Ppg3=0.07*10.197,Ppg4=0.07*10.197)
 
 def main():
     pass

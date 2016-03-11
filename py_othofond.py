@@ -3,6 +3,8 @@
 
 import xlrd
 import re
+import pandas as pd
+import matplotlib.pyplot as plt
 
 inpfile="D:/ex1f.xlsx"
 outfile="D:/outfond.txt"
@@ -28,7 +30,7 @@ def balance():
         if sheet.row_values(irow)[7]!='':
             print irow, sheet.row_values(irow)[7]
             debet+=sheet.row_values(irow)[7]
-    print 'itogo debet = ',debet
+
 
     credet=0
     for irow in range(11+1,sheet.nrows-1):
@@ -37,6 +39,7 @@ def balance():
         if sheet.row_values(irow)[8]!='':
             print irow, sheet.row_values(irow)[8]
             credet+=sheet.row_values(irow)[8]
+    print 'itogo debet = ',debet
     print 'itogo credet = ',credet
 
     balance=credet-debet
@@ -80,7 +83,32 @@ def names_donors():
     f.close()
 
 
+def count_mounth_income():
+    u"""
+    расчитываем приход и расход по месяцам и дням
+    """
+    xl=pd.ExcelFile(inpfile)
+    df=xl.parse(u"Лист1",skiprows=11,skip_footer=1,dayfirst=True,parse_dates=[1])
+    dfnz=df.fillna(0)
+    dfnt=df
+    dfnt.index=dfnt[u'Дата']
+    dfnt.index.name='time'
+    debet=pd.Series(dfnt[u'Дебет'])
+    debet.name='debet'
+    debetn=debet.fillna(0.)
+    credit=pd.Series(dfnt[u'Кредит'])
+    credit.name='credit'
+    creditn=credit.fillna(0.)
+    plt.plot(debetn.index,debetn*-1,'r-')
+    plt.plot(creditn.index,creditn,'b-');plt.show()
 
+    df[u'Дебет'].plot(color='r')
+    df[u'Кредит'].plot(color='g')
+    plt.show()
+    dfnt[u'Дебет'].plot(color='r')
+    df[u'Кредит'].plot(color='g')
+    plt.show()
+    creditm=creditn.resample('1M',how='sum')#суммарно доходы по месяцам
 
 
 '''pattern=re.compile(u"ИЛ1ЬЯ|АЛЕ",re.IGNORECASE)

@@ -35,8 +35,7 @@ u'SG_CfResL3',
 u'SG_CfResL4',
 u'YhqCor1_eqf',
 u'YhqCor2_eqf',
-u'YhqCor3_eqf',
-u'Nin', u'Pazin', u'Pgpkin',u'Tpvdain', u'Tpvdbin'
+u'YhqCor3_eqf'
 ]
 
 mod_coef_delt=[
@@ -60,8 +59,8 @@ yexpvar=[
 'dPgcn3',
 'dPgcn4',
 'Pzone1',
-'Pzone2',
-'Ntep','Naz','Nrr','N1k','N2k','Naknp','Nturb',
+##'Pzone2',
+##'Ntep=0.,Naz=0.,Nrr=0.,N1k=0.,N2k=0.,Naknp=0.,Nturb=0.,
 'Tpv1',
 'Tpv2',
 'Tpv3',
@@ -73,13 +72,7 @@ yexpvar=[
 'Ppg1',
 'Ppg2',
 'Ppg3',
-'Ppg4',
-'Pgpk',
-'tpvd1','tpvd2',
-'ppvd1','ppvd2',
-'gpvd1','gpvd2',
-'ppv1','ppv2','ppv3','ppv4',
-'gkgtn'
+'Ppg4'
 ]
 
 
@@ -163,9 +156,9 @@ u'tpvd2':0.1}
 
 
 
-dirofdis='G:/git_disser/disser/'
+dirofdis='G:/#work/obrguess/'
 
-storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0_by1.h5')
+storeofd = pd.HDFStore(dirofdis+'model_jac_coef.h5')
 #dataindf=pd.DataFrame({'Nin':storeofd['Nin'],'pgpkin':storeofd['pgpkin'],'tpvd1in':storeofd['tpvd1in'],'tpvd2in':storeofd['tpvd2in'],'pazin':storeofd['pazin']})
 #storeofd['Nin']=pd.Series(optim_npmas.transpose()[1])
 #storeofd['pgpkin']=pd.Series(optim_npmas.transpose()[2])
@@ -224,8 +217,8 @@ def all_graf(vkey):
         plt.ylabel(kk+'\t'+str(deriv_test[kk]))
         if abs(plt.ylim()[1]-plt.ylim()[0])<deriv_test[kk]:
             print kk,'\tout of limits'
-            plt.ylim((out_data.ix[qqn.index][kk].mean()-deriv_test[kk],out_data.ix[qqn.index][kk].mean()+deriv_test[kk]))
-        print kk,'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',deriv_test[kk]
+            plt.ylim((out_data.ix[qq.index][kk].mean()-deriv_test[kk],out_data.ix[qq.index][kk].mean()+deriv_test[kk]))
+        print kk,'\t',out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',deriv_test[kk]
 
 
         deriv1old=[(out_data.ix[qqn.index][kk].iloc[3]-out_data.ix[qqn.index][kk].iloc[0])/(qqn[vkey].iloc[3]-qqn[vkey].iloc[0])]
@@ -247,9 +240,6 @@ def all_graf(vkey):
         plt.ylabel(kk)
         plt.show()
     """
-outlim1=[]
-outlim2=[]
-
 
 def JAC_from_arch(vkey):
     u"""
@@ -266,13 +256,11 @@ def JAC_from_arch(vkey):
     qqn=qq[qq[vkey]!=qq[vkey][0]] #выбрали только изменения переменной vkey в архиве
     der={}
     for kk in yexpvar: #out_data.ix[qq.index].keys()
-        if abs(out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min())<0.01*deriv_test[kk]:
+        if abs(out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min())<deriv_test[kk]:
             u'''отбрасываем что ниже погрешности'''
             print kk,'\tout of limits'
-            #plt.ylim((out_data.ix[qq.index][kk].mean()-deriv_test[kk],out_data.ix[qq.index][kk].mean()+deriv_test[kk]))
-            #plt.show()
+            plt.ylim((out_data.ix[qq.index][kk].mean()-deriv_test[kk],out_data.ix[qq.index][kk].mean()+deriv_test[kk]))
             der[kk]=0
-            outlim1.append(vkey+'\t'+kk)
         else:
             print u'index\tmax-min из всех знач\tmaxn-minn из якобиантн знач\tконстанта отсечения погрешности'
             print kk,'\t',out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',deriv_test[kk]
@@ -289,21 +277,9 @@ def JAC_from_arch(vkey):
             derivnp=np.array(deriv1)
             print 'mean= ',derivnp.mean(),derivnp.std(),
             der[kk]=derivnp.mean()
-            if abs(derivnp.mean())<2*derivnp.std():
-                print "!!!bad deriv",
-                der[kk]=0
-                outlim2.append(vkey+'\t'+kk)
-            u"""секция вывода на графики
-            plt.plot(qq[vkey],out_data.ix[qq.index][kk],'o')
-            plt.plot(qqn[vkey],out_data.ix[qqn.index][kk],'r-')
-            plt.xlabel(vkey)
-            plt.ylabel(kk+'\t'+str(deriv_test[kk]))
-            if abs(plt.ylim()[1]-plt.ylim()[0])<deriv_test[kk]:
-                print kk,'\tout of limits'
-                plt.ylim((out_data.ix[qqn.index][kk].mean()-deriv_test[kk],out_data.ix[qqn.index][kk].mean()+deriv_test[kk]))
-            plt.show()
-            """
-        print
+        if abs(derivnp.mean())<2*derivnp.std():
+            print "!!!bad deriv",
+            der[kk]=0
         print
     return der
 
@@ -435,16 +411,10 @@ def y_fr_model():
         Thol1=v.OG_T_hol[0],Thol2=v.OG_T_hol[1],Thol3=v.OG_T_hol[2],Thol4=v.OG_T_hol[3],
         dPgcn1=v.OG_pp_gcn[0],dPgcn2=v.OG_pp_gcn[1],dPgcn3=v.OG_pp_gcn[2],dPgcn4=v.OG_pp_gcn[3],
         Pzone1=v.OG_p_rea,Pzone2=0.,
-        Ntep=0.,Naz=0.,Nrr=0.,N1k=v.OG_N_1k,N2k=v.OG_N_pg_calc,Naknp=v.OG_N_aknp,Nturb=v.OG_N_gen,
+        Ntep=0.,Naz=0.,Nrr=0.,N1k=0.,N2k=0.,Naknp=0.,Nturb=0.,
         Tpv1=v.OG_t_pitv[0],Tpv2=v.OG_t_pitv[1],Tpv3=v.OG_t_pitv[2],Tpv4=v.OG_t_pitv[3],
         Gpv1=v.OG_g_pitv[0],Gpv2=v.OG_g_pitv[1],Gpv3=v.OG_g_pitv[2],Gpv4=v.OG_g_pitv[3],
-        Ppg1=v.OG_p_pg[0]+ppgpravk,Ppg2=v.OG_p_pg[1]+ppgpravk,Ppg3=v.OG_p_pg[2]+ppgpravk,Ppg4=v.OG_p_pg[3]+ppgpravk,
-        Pgpk=v.OG_P_gpk,
-        tpvd1=v.OG_T_pvd1,tpvd2=v.OG_T_pvd2,
-        ppvd1=v.OG_P_pvd[0],ppvd2=v.OG_P_pvd[1],
-        gpvd1=v.OG_G_pvd[0],gpvd2=v.OG_G_pvd[1],
-        ppv1=v.OG_p_pitvg[0],ppv2=v.OG_p_pitvg[1],ppv3=v.OG_p_pitvg[2],ppv4=v.OG_p_pitvg[3],
-        gkgtn=0.)
+        Ppg1=v.OG_p_pg[0]+ppgpravk,Ppg2=v.OG_p_pg[1]+ppgpravk,Ppg3=v.OG_p_pg[2]+ppgpravk,Ppg4=v.OG_p_pg[3]+ppgpravk)
     yexp1=np.array([arch_var[x] for x in yexpvar])
     return yexp1
 
@@ -457,10 +427,10 @@ def Ppg_popravka(ppgpravk):
     """
     global y_from_model_mas
     y_from_model_mas_prav=y_from_model_mas.copy()
-    y_from_model_mas_prav[32]+=ppgpravk
-    y_from_model_mas_prav[31]+=ppgpravk
-    y_from_model_mas_prav[30]+=ppgpravk
-    y_from_model_mas_prav[29]+=ppgpravk
+    y_from_model_mas_prav[24]+=ppgpravk
+    y_from_model_mas_prav[23]+=ppgpravk
+    y_from_model_mas_prav[22]+=ppgpravk
+    y_from_model_mas_prav[21]+=ppgpravk
     return y_from_model_mas_prav
 
 
@@ -534,7 +504,6 @@ def lsqmas():
     print 'solve dx-',normolizeX_ob(ss[0][:-1])
     print 'solve x-',dx2x(normolizeX_ob(ss[0][:-1]))
     print 'Ppgadd -',ss[0][-1]
-    plt.plot(s_sum);plt.show()
     for pp in mod_coef:
         print inp_data.iloc[0][pp],
     #проверка:

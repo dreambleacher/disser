@@ -79,25 +79,25 @@ def process_linearise():
     #coef_dict=out_model_coef()#вывод параметров модели
     #запись в файл
 
-def first_run():
+def first_run(filename='liner_JAC_model_x0_by1.h5'):
     'create h5 massive'
 
 
     v.OPCCMD=4 #load(!) state
     oudict=out_param()
     outinp=out_model_coef()
-    storeofd = pd.HDFStore(dirofcalc+'liner_JAC_model_x0_by1.h5')
+    storeofd = pd.HDFStore(dirofcalc+filename)
     storeofd['model_data']=pd.DataFrame(oudict,index=[0])
     storeofd['inp_data']=pd.DataFrame(outinp,index=[0])
     storeofd.close()
 
 
-def go_throught_net():
+def go_throught_net(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_by1.h5'):
     u"""
     идем по сетке
     """
     startall = time.time()
-    param_vh = np.array([100.,60.9,215.,215.,160.])
+    param_vh = np.array(param_vhm)
     for m_c in mod_coef: #для каждого параметра модели
         for pp in mod_coef_net[m_c]:
             start = time.time()
@@ -108,7 +108,7 @@ def go_throught_net():
             set_m_st(param_vh)
             oudict=out_param()
             coef_dict=out_model_coef()
-            storeofd = pd.HDFStore(dirofcalc+'liner_JAC_model_x0_by1.h5')
+            storeofd = pd.HDFStore(dirofcalc+filename)
             storeofd['model_data']=storeofd['model_data'].append(oudict,ignore_index=True)
             storeofd['inp_data']=storeofd['inp_data'].append(coef_dict,ignore_index=True)
             storeofd.close()
@@ -119,7 +119,7 @@ def go_throught_net():
             start = time.time()
             print '____________________________________________________'
             print vh_c,vv
-            vh0=dict(N=100.,Pgpk=60.9,tpvd1=215.,tpvd2=215.,Paz=160.)
+            vh0=dict(N=param_vhm[0],Pgpk=param_vhm[1],tpvd1=param_vhm[2],tpvd2=param_vhm[3],Paz=param_vhm[4])
             vh0[vh_c]=vv
             vhmas=np.array([vh0['N'],vh0['Pgpk'],vh0['tpvd1'],vh0['tpvd2'],vh0['Paz']])
             print vhmas
@@ -128,7 +128,7 @@ def go_throught_net():
             set_m_st(vhmas)
             oudict=out_param()
             coef_dict=out_model_coef()
-            storeofd = pd.HDFStore(dirofcalc+'liner_JAC_model_x0_by1.h5')
+            storeofd = pd.HDFStore(dirofcalc+filename)
             storeofd['model_data']=storeofd['model_data'].append(oudict,ignore_index=True)
             storeofd['inp_data']=storeofd['inp_data'].append(coef_dict,ignore_index=True)
             storeofd.close()
@@ -136,6 +136,23 @@ def go_throught_net():
             print u"Скорость выполенения: ",(finish - start)/60.,u" минут"
     finishall = time.time()
     print u"Скорость выполенения всего: ",(finishall - startall)/60.,u" минут"
+
+def net4net():
+    u"""
+    необходимо проверить зависимость якобиана
+    от начальной точки в которой считаем якобиан модели
+    """
+    mas4test=[  [98.,60.9,215.,215.,160.],
+                [100.,61.3,215,215.,160.],
+                [100.,60.9,220,215.,160.],
+                [100.,60.9,215.,215.,159.]]
+    for mt in mas4test:
+        print mt
+        fn='liner_JAC_model_x0'+str(param_vhm)[1:-1]+'.h5'
+        first_run(fn)
+        go_throught_net(param_vhm=mt,filename=fn)
+
+
 
 def main():
     pass

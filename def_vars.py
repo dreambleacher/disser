@@ -154,17 +154,17 @@ arch_var_deviation=dict(
     Tgor1=5.,Tgor2=5.,Tgor3=5.,Tgor4=5.,
     Thol1=3.,Thol2=3.,Thol3=3.,Thol4=3.,
     dPgcn1=0.005*10.197,dPgcn2=0.005*10.197,dPgcn3=0.005*10.197,dPgcn4=0.005*10.197,
-    Pzone1=0.11*10.197,Pzone2=100., #ot baldi max 100
-    Ntep=100.,Naz=100.,Nrr=100.,N1k=100.,N2k=100.,Naknp=100.,Nturb=100., #ot baldi max 100
+    Pzone1=0.11*10.197,Pzone2=10000000000., #ot baldi max 100
+    Ntep=100000000.,Naz=100000000.,Nrr=100000000.,N1k=100000000.,N2k=100000000.,Naknp=100000000.,Nturb=40., #ot baldi max 100
     Tpv1=2.2,Tpv2=2.2,Tpv3=2.2,Tpv4=2.2,
     Gpv1=97.,Gpv2=97.,Gpv3=97.,Gpv4=97.,
     Ppg1=0.07*10.197,Ppg2=0.07*10.197,Ppg3=0.07*10.197,Ppg4=0.07*10.197,
-    Pgpk=0.07*10.197,#ot baldi
+    Pgpk=0.01*10.197,#ot baldi
     tpvd1=1.5,tpvd2=1.5,#ot baldi
     ppvd1=0.07*10.197,ppvd2=0.07*10.197,#ot baldi
     gpvd1=97.,gpvd2=97.,#ot baldi
     ppv1=0.07*10.197,ppv2=0.07*10.197,ppv3=0.07*10.197,ppv4=0.07*10.197,#ot baldi
-    gkgtn=100.) #ot baldi
+    gkgtn=1000000000.) #ot baldi
 
 def main():
     pass

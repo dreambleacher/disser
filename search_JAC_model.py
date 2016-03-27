@@ -164,6 +164,7 @@ u'tpvd2':0.1}
 
 
 dirofdis='G:/git_disser/disser/'
+#dirofdis='D:/git_py/' #work
 
 storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0_by1.h5')
 #dataindf=pd.DataFrame({'Nin':storeofd['Nin'],'pgpkin':storeofd['pgpkin'],'tpvd1in':storeofd['tpvd1in'],'tpvd2in':storeofd['tpvd2in'],'pazin':storeofd['pazin']})
@@ -356,6 +357,17 @@ def test():
         for ij in jac[j]:
             print '\t',ij,'\t',jac[j][ij]
 
+    '''write JAC to
+    '''
+    jacdf=pd.DataFrame(jac)
+    writer=pd.ExcelWriter(dirofdis+'jac.xlsx')
+    jacdf.to_excel(dirofdis+'jac.xlsx',sheet_name='JAC')
+    witer.save()
+    jacdf.to_html(dirofdis+'jac.html',float_format=lambda x: '%10.2f' % x)#,float_format='%5.2f'
+
+
+
+
 def funk_fr_jac(dx):
     bounddx=[5,5,5,5,
     5,5,5,5,
@@ -409,7 +421,7 @@ def normolizeX_ob(dx_norm):
     return dx
 
 
-def boundX(x):
+def boundX(x,fullprint=True):
     u"""
     ограничиваем Х
     """
@@ -418,11 +430,13 @@ def boundX(x):
     for i,xx in enumerate(nx):
         if xx<mod_coef_delta_m[i][0]:
             nx[i]=mod_coef_delta_m[i][0]
-            print 'out of bound',i,xx,r'<',mod_coef_delta_m[i][0]
+            if fullprint:
+                print 'out of bound',i,xx,r'<',mod_coef_delta_m[i][0]
             rel_err[i]=mod_coef_delta_m[i][0]-xx
         elif xx>mod_coef_delta_m[i][1]:
             nx[i]=mod_coef_delta_m[i][1]
-            print 'out of bound',i,xx,r'>',mod_coef_delta_m[i][1]
+            if fullprint:
+                print 'out of bound',i,xx,r'>',mod_coef_delta_m[i][1]
             rel_err[i]=xx-mod_coef_delta_m[i][0]
     return nx,rel_err
 
@@ -480,35 +494,41 @@ def f4minimise(x,xaddppg):
     minimize_polinomial=(yexp1-y0m-np.dot(mas.T,x-x0m))/yexperr
     return minimize_polinomial
 
-def f4minimise_buf(dxnorm):
+def f4minimise_buf(dxnorm,fullprint=True):
     u"""
     первая буферная функция для минимизации которая берет dxnorm а не x
     """
     global shag
     global s_sum
-    print '_________________________________________________________________'
-    print u"ШАГ ",shag
-    print 'vector dxnorm-',dxnorm
+    if fullprint:
+        print '_________________________________________________________________'
+        print u"ШАГ ",shag
+        print 'vector dxnorm-',dxnorm
     dx=normolizeX_ob(dxnorm[:-1]) #перевели в ненормированный вид
     xaddppg=dxnorm[-1]#последний с конца элемент - аддитивная поправка давлений на выходе из ПГ)
-    print 'vector dx-',dx
+    if fullprint:
+        print 'vector dx-',dx
     x=dx2x(dx) #перевели от изменений к Х
-    print 'vector x-',x
-    xbounded,rel_x=boundX(x) #отсекли изменения сверх предела
+    if fullprint:
+        print 'vector x-',x
+    xbounded,rel_x=boundX(x,fullprint) #отсекли изменения сверх предела
     reln_x=normolizeX(rel_x) #Нормализуем отклонение от границ параметров
     k_bounded=1+reln_x.sum()/1000. #множитель увеличивающийся с отклонением от границ параметров
-    print u"множитель к баунд=",k_bounded
-    print u"поправка к P ПГ=",xaddppg
+    if fullprint:
+        print u"множитель к баунд=",k_bounded
+        print u"поправка к P ПГ=",xaddppg
     minimize_polinomial=f4minimise(xbounded,xaddppg)*k_bounded#*k_bounded
     shag+=1
     #вводим поправку на отклонение коэффициентов друг от друга
     xotklmas=[x[0]-x[1],x[0]-x[2],x[0]-x[3]]
     minimize_polinomial=np.append(minimize_polinomial,xotklmas)
-    print "result of min func = ",minimize_polinomial
+    if fullprint:
+        print "result of min func = ",minimize_polinomial
     s_sum_t=0 #сумма квадратов текущего вывода функции отклонения
     for e in minimize_polinomial: s_sum_t+=e*e
     s_sum.append(s_sum_t) #массив общего расчета вывода функций отклонения
-    print "sum of sqr func= ",s_sum_t
+    if fullprint:
+        print "sum of sqr func= ",s_sum_t
     return minimize_polinomial
 
 
@@ -523,6 +543,7 @@ def lsqmas():
     dx0=np.zeros(len(mod_coef)+1) #отправная точка решения - все отклонения - нули
     s_sum=[]
     shag=1
+    y_from_model_mas=y_fr_model() # для ускорения считаем только 1 раз
     #ssnp=np.linalg.lstsq(mas.T,yexp1-y0m) #решение
     #ssfort=scipy.optimize.nnls(mas.T,yexp1-y0m)
     #sslsqscypy=scipy.optimize.leastsq(funk_fr_jac,mod_coef_delt)#np.array([inp_data.iloc[0][x] for x in mod_coef])
@@ -534,7 +555,23 @@ def lsqmas():
     print 'solve dx-',normolizeX_ob(ss[0][:-1])
     print 'solve x-',dx2x(normolizeX_ob(ss[0][:-1]))
     print 'Ppgadd -',ss[0][-1]
+    xbounded,rrrrel_x=boundX(dx2x(normolizeX_ob(ss[0][:-1])))
     plt.plot(s_sum);plt.show()
+    print 'var\texp\tsolve\tdiff'
+    for pp,vv in enumerate(yexpvar):
+        print vv,'\t',
+        print y_from_model_mas[pp],'\t',
+        print y0m[pp]+np.dot(mas.T,normolizeX_ob(ss[0][:-1]))[pp],'\t',
+        print y_from_model_mas[pp]-y0m[pp]-np.dot(mas.T,-x0m+xbounded)[pp]
+    print '___'
+##    print 'YYexp1'
+##    print yexpvar
+##    print y_from_model_mas
+##    print 'YYsolve'
+##    print y0m+np.dot(mas.T,normolizeX_ob(ss[0][:-1]))
+##    print 'yyexp1 - YYsolve'
+##    print y_from_model_mas-y0m-np.dot(mas.T,normolizeX_ob(ss[0][:-1]))
+##    print '___'
     for pp in mod_coef:
         print inp_data.iloc[0][pp],
     #проверка:
@@ -552,9 +589,30 @@ def lsqmas():
     print sumtr1
 
 
-
-
-
+def sumsq_vliyan():
+    u"""
+    составление таблицы влияния на сумму квадратов от изменения параметров модели
+    """
+    dx0=np.zeros(len(mod_coef)+1)
+    sumvlel=f4minimise_buf(dx0,fullprint=False)
+    sumvl=0
+    for el in sumvlel:
+        sumvl+=el*el
+    sumbeg=sumvl
+    for dxel in range(len(dx0)):
+        try:
+            print mod_coef[dxel],
+        except IndexError:
+            print 'popravka ppg',
+        dx0=np.zeros(len(mod_coef)+1)
+        dx0[dxel]=-1.
+        sumvlel=f4minimise_buf(dx0,fullprint=False)
+        sumvl=0
+        for el in sumvlel:
+            sumvl+=el*el
+        sumend=sumvl
+        sumder=sumend-sumbeg
+        print '\t',sumder
 
 
 

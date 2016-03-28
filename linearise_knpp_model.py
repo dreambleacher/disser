@@ -29,6 +29,7 @@ out_model_coef()
 """
 
 dirofcalc='G:/git_disser/disser/'
+#dirofcalc='D:/git_py/' #work
 
 def create_net_coef():
     u"""
@@ -79,11 +80,11 @@ def process_linearise():
     #coef_dict=out_model_coef()#вывод параметров модели
     #запись в файл
 
-def first_run(filename='liner_JAC_model_x0_by1.h5'):
-    'create h5 massive'
-
-
-    v.OPCCMD=4 #load(!) state
+def first_run(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_by1.h5'):
+    'create h5 massive and save state'
+    param_vh = np.array(param_vhm)
+    set_m_st(param_vh)
+    v.OPCCMD=8 #save(!) state
     oudict=out_param()
     outinp=out_model_coef()
     storeofd = pd.HDFStore(dirofcalc+filename)
@@ -135,7 +136,9 @@ def go_throught_net(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_mod
             finish = time.time()
             print u"Скорость выполенения: ",(finish - start)/60.,u" минут"
     finishall = time.time()
+    print '____________________________________________________'
     print u"Скорость выполенения всего: ",(finishall - startall)/60.,u" минут"
+    print '____________________________________________________'
 
 def net4net():
     u"""
@@ -147,9 +150,18 @@ def net4net():
                 [100.,60.9,220,215.,160.],
                 [100.,60.9,215.,215.,159.]]
     for mt in mas4test:
+        print ' '
+        print ' '
+        print ' '
+        print '____________________________________________________'
+        print '____________________________________________________'
+        print u'НОВЫй РАСЧЕТ'
+        print '____________________________________________________'
+        print '____________________________________________________'
         print mt
-        fn='liner_JAC_model_x0'+str(param_vhm)[1:-1]+'.h5'
-        first_run(fn)
+        print '____________________________________________________'
+        fn='liner_JAC_model_x0'+str(mt)[1:-1]+'.h5'
+        first_run(param_vhm=mt,filename=fn)
         go_throught_net(param_vhm=mt,filename=fn)
 
 

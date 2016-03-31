@@ -35,7 +35,7 @@ def create_net_coef():
     u"""
     создаем сеточку параметров модели для расчета якобиана
     """
-    q_mc=5 #число разбиения отрезка параметров
+    q_mc=10 #число разбиения отрезка параметров
     mod_coef_net={}
     for m_c in mod_coef:
         mod_delta = mod_coef_delta[m_c][1] - mod_coef_delta[m_c][0]
@@ -46,7 +46,7 @@ def create_net_vhod():
     u"""
     создаем сеточку входов модели для расчета якобиана
     """
-    q_mc=5 #число разбиения отрезка параметров
+    q_mc=10 #число разбиения отрезка параметров
     mod_vhod_net={}
     for v_c in vh_param:
         mod_delta = vh_delt[v_c][1] - vh_delt[v_c][0]
@@ -80,8 +80,10 @@ def process_linearise():
     #coef_dict=out_model_coef()#вывод параметров модели
     #запись в файл
 
-def first_run(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_by1.h5'):
+def first_run(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_by1.h5',mod_param=inp_data.iloc[0]):
     'create h5 massive and save state'
+    for m_c in mod_coef[:-5]:
+        v[m_c]=mod_param[m_c]
     param_vh = np.array(param_vhm)
     set_m_st(param_vh)
     v.OPCCMD=8 #save(!) state
@@ -145,11 +147,32 @@ def net4net():
     необходимо проверить зависимость якобиана
     от начальной точки в которой считаем якобиан модели
     """
-    mas4test=[  [98.,60.9,215.,215.,160.],
+    '''mas4test=[  [98.,60.9,215.,215.,160.],
                 [100.,61.3,215,215.,160.],
                 [100.,60.9,220,215.,160.],
-                [100.,60.9,215.,215.,159.]]
-    for mt in mas4test:
+                [100.,60.9,215.,215.,159.]]'''#done
+    mas4test=[[100.,60.9,215.,215.,160.]]
+    new_inpdata=inp_data.iloc[0].copy()
+##    for mt in mas4test:
+##        u'''часть для расчета изменения вход данных модели'''
+##        print ' '
+##        print ' '
+##        print ' '
+##        print '____________________________________________________'
+##        print '____________________________________________________'
+##        print u'НОВЫй РАСЧЕТ'
+##        print '____________________________________________________'
+##        print '____________________________________________________'
+##        print mt
+##        print '____________________________________________________'
+##        fn='liner_JAC_model_x0'+str(mt)[1:-1]+'_10points.h5'
+##        first_run(param_vhm=mt,filename=fn)
+##        go_throught_net(param_vhm=mt,filename=fn)
+    for m_c in mod_coef[:-5]:
+        mt=mas4test[0]
+        new_inpdata=inp_data.iloc[0].copy()
+        new_inpdata[m_c]=mod_coef_delta[m_c][1]
+        u'''часть для расчета изменения параметров модели'''
         print ' '
         print ' '
         print ' '
@@ -158,12 +181,11 @@ def net4net():
         print u'НОВЫй РАСЧЕТ'
         print '____________________________________________________'
         print '____________________________________________________'
-        print mt
+        print m_c,'=',new_inpdata[m_c]
         print '____________________________________________________'
-        fn='liner_JAC_model_x0'+str(mt)[1:-1]+'.h5'
-        first_run(param_vhm=mt,filename=fn)
+        fn='liner_JAC_model_x0'+str(mt)[1:-1]+str(m_c)+'_'+str(new_inpdata[m_c])+'_10.h5'
+        first_run(param_vhm=mt,filename=fn,mod_param=new_inpdata)
         go_throught_net(param_vhm=mt,filename=fn)
-
 
 
 def main():

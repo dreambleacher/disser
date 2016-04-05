@@ -252,7 +252,7 @@ outlim1=[]
 outlim2=[]
 
 
-def JAC_from_arch(vkey):
+def JAC_from_arch(vkey,pr_opt=False):
     u"""
     ищем один столбец якобиана из архива
     наверное для теста
@@ -267,45 +267,48 @@ def JAC_from_arch(vkey):
     qqn=qq[qq[vkey]!=qq[vkey][0]] #выбрали только изменения переменной vkey в архиве
     der={}
     for kk in yexpvar: #out_data.ix[qq.index].keys()
-        if abs(out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min())<0.01*deriv_test[kk]:
-            u'''отбрасываем что ниже погрешности'''
-            print kk,'\tout of limits'
-            #plt.ylim((out_data.ix[qq.index][kk].mean()-deriv_test[kk],out_data.ix[qq.index][kk].mean()+deriv_test[kk]))
-            #plt.show()
+        if abs(out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min())<0.1*arch_var_deviation[kk]:
+            u'''если на всем интервале изменения параметра модели
+             выходной параметр меньше десятой доли погрешности,
+              то обнуляем якобиан
+              раньше везде вместо arch_var_deviation был deriv_test'''
+            if pr_opt: print u'index\tmax-min из всех знач\tmaxn-minn из якобиантн знач\tконстанта отсечения погрешности'
+            if pr_opt: print kk,'\t',out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',arch_var_deviation[kk]
+            if pr_opt: print kk,'\tout of limits'
             der[kk]=0
             outlim1.append(vkey+'\t'+kk)
         else:
-            print u'index\tmax-min из всех знач\tmaxn-minn из якобиантн знач\tконстанта отсечения погрешности'
-            print kk,'\t',out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',deriv_test[kk]
+            if pr_opt: print u'index\tmax-min из всех знач\tmaxn-minn из якобиантн знач\tконстанта отсечения погрешности'
+            if pr_opt: print kk,'\t',out_data.ix[qq.index][kk].max()-out_data.ix[qq.index][kk].min(),'\t',out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min(),'\t',arch_var_deviation[kk]
             #производная по максимальным точкам:
             deriv1old=[(out_data.ix[qqn.index][kk].iloc[qqn[vkey].shape[0]-1]-out_data.ix[qqn.index][kk].iloc[0])/(qqn[vkey].iloc[qqn[vkey].shape[0]-1]-qqn[vkey].iloc[0])]
             deriv1=[(out_data.ix[qqn.index][kk].iloc[qqn[vkey].shape[0]-1]-y0[kk])/(qqn[vkey].iloc[qqn[vkey].shape[0]-1]-x0[vkey])]
-            print '\t',deriv1
+            if pr_opt: print '\t',deriv1
             for iii in range(qqn[vkey].shape[0]-1):
                 #производная по маленьким отрезкам
                 #deriv1.append((out_data.ix[qqn.index][kk].iloc[iii+1]-out_data.ix[qqn.index][kk].iloc[iii])/(qqn[vkey].iloc[iii+1]-qqn[vkey].iloc[iii]))
                 nud=(out_data.ix[qqn.index][kk].iloc[iii+1]-y0[kk])/(qqn[vkey].iloc[iii+1]-x0[vkey])
                 deriv1.append(nud)
-                print nud,
+                if pr_opt: print nud,
             derivnp=np.array(deriv1)
-            print 'mean= ',derivnp.mean(),derivnp.std(),
+            if pr_opt: print 'mean= ',derivnp.mean(),derivnp.std(),
             der[kk]=derivnp.mean()
             if abs(derivnp.mean())<2*derivnp.std():
-                print "!!!bad deriv",
+                if pr_opt: print "!!!bad deriv",
                 der[kk]=0
                 outlim2.append(vkey+'\t'+kk)
-            u"""секция вывода на графики
-            plt.plot(qq[vkey],out_data.ix[qq.index][kk],'o')
-            plt.plot(qqn[vkey],out_data.ix[qqn.index][kk],'r-')
-            plt.xlabel(vkey)
-            plt.ylabel(kk+'\t'+str(deriv_test[kk]))
-            if abs(plt.ylim()[1]-plt.ylim()[0])<deriv_test[kk]:
-                print kk,'\tout of limits'
-                plt.ylim((out_data.ix[qqn.index][kk].mean()-deriv_test[kk],out_data.ix[qqn.index][kk].mean()+deriv_test[kk]))
-            plt.show()
-            """
-        print
-        print
+        u"""секция вывода на графики
+        plt.plot(qq[vkey],out_data.ix[qq.index][kk],'o')
+        plt.plot(qqn[vkey],out_data.ix[qqn.index][kk],'r-')
+        plt.xlabel(vkey)
+        plt.ylabel(kk+'   deriv='+str(arch_var_deviation[kk]))
+        if abs(plt.ylim()[1]-plt.ylim()[0])<arch_var_deviation[kk]:
+            print kk,'\tout of limits'
+            plt.ylim((out_data.ix[qqn.index][kk].mean()-arch_var_deviation[kk],out_data.ix[qqn.index][kk].mean()+arch_var_deviation[kk]))
+        plt.show()
+        #"""
+        if pr_opt: print
+        if pr_opt: print
     return der
 
 def all_JAC():
@@ -328,6 +331,35 @@ def jac_2_matrix(jac):
 
 jac=all_JAC()
 mas=jac_2_matrix(jac)
+
+def search_changes_jac():
+    u"""
+    ищем изменения якобиана в зависимости от начальной точки
+    """
+    files_arr=['liner_JAC_model_x0_by1.h5',r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 159.0.h5',
+                r'liner_JAC_model_x098.0, 60.9, 215.0, 215.0, 160.0.h5',r'liner_JAC_model_x0100.0, 60.9, 220, 215.0, 160.0.h5',
+                r'liner_JAC_model_x0100.0, 61.3, 215, 215.0, 160.0.h5']
+    arr_names=['beg','p159','n98','t220','p2_61_3']
+    jacdict={}
+    for i,fl in enumerate(files_arr):
+        storeofd = pd.HDFStore(dirofdis+fl)
+        out_data=storeofd['model_data']
+        inp_data=storeofd['inp_data']
+        storeofd.close()
+        y0=out_data.iloc[0]
+        y0m=np.array([out_data.iloc[0][x] for x in yexpvar])
+        x0=inp_data.iloc[0]
+        x0m=np.array([inp_data.iloc[0][x] for x in mod_coef])
+        jac=all_JAC()
+        jdf=pd.DataFrame(jac)
+##        jdfxnorm=jdf.copy()
+##        for par in mod_coef:
+##            dmt=mod_coef_delta[par][1]-mod_coef_delta[par][0] #временная переменная для нормировки
+##            jdfxnorm[par]=jdfxnorm[par]
+##        normcoef_mas=np.array([normcoef[p] for p in mod_coef])
+##        dx_norm=dx/normcoef_mas
+        jacdict[arr_names[i]]=jdf
+    jacpnl=pd.Panel(jacdict)
 
 def test():
     u"""Проверили правильность якобиана, все ок
@@ -382,12 +414,23 @@ def funk_fr_jac(dx):
             return aa
     return (yexp1-y0m-np.dot(mas.T,dx))#/yexp1 #разница между значением функции и постчитанным значением
 
+u"""
+для нормировки без зашкала нужно прийти к нулевой точке отсчета
+"""
+x00=[]
+for par in mod_coef:
+    x00.append(mod_coef_delta[par][0])
+y00=y0m+np.dot(mas.T,x00-x0m)
+x00=np.array(x00)
+y00=np.array(y00)
+
 def dx2x(dx):
     u"""
     Функция перевода изменения Х в значение Х от Х0
     нужна для нормальной работы минимизатора
     """
-    x=x0m+dx
+    #x=x0m+dx
+    x=x00+dx
     return x
 
 def x2dx(x):
@@ -395,7 +438,8 @@ def x2dx(x):
     ОБРАТНАЯ Функция перевода изменения DХ в значение Х от Х0
     нужна для нормальной работы минимизатора
     """
-    dx=x-x0m
+    #dx=x-x0m
+    dx=x-x00
     return dx
 
 def normolizeX(dx):
@@ -491,7 +535,8 @@ def f4minimise(x,xaddppg):
     """
     yexp1=Ppg_popravka(xaddppg)
     yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
-    minimize_polinomial=(yexp1-y0m-np.dot(mas.T,x-x0m))/yexperr
+    #minimize_polinomial=(yexp1-y0m-np.dot(mas.T,x-x0m))/yexperr
+    minimize_polinomial=(yexp1-y00-np.dot(mas.T,x-x00))/yexperr
     return minimize_polinomial
 
 def f4minimise_buf(dxnorm,fullprint=True):
@@ -505,7 +550,7 @@ def f4minimise_buf(dxnorm,fullprint=True):
         print u"ШАГ ",shag
         print 'vector dxnorm-',dxnorm
     dx=normolizeX_ob(dxnorm[:-1]) #перевели в ненормированный вид
-    xaddppg=dxnorm[-1]#последний с конца элемент - аддитивная поправка давлений на выходе из ПГ)
+    xaddppg=dxnorm[-1]*4.#последний с конца элемент - аддитивная поправка давлений на выходе из ПГ)
     if fullprint:
         print 'vector dx-',dx
     x=dx2x(dx) #перевели от изменений к Х
@@ -520,8 +565,8 @@ def f4minimise_buf(dxnorm,fullprint=True):
     minimize_polinomial=f4minimise(xbounded,xaddppg)*k_bounded#*k_bounded
     shag+=1
     #вводим поправку на отклонение коэффициентов друг от друга
-    xotklmas=[x[0]-x[1],x[0]-x[2],x[0]-x[3]]
-    minimize_polinomial=np.append(minimize_polinomial,xotklmas)
+    #xotklmas=[x[0]-x[1],x[0]-x[2],x[0]-x[3]]
+    #minimize_polinomial=np.append(minimize_polinomial,xotklmas)
     if fullprint:
         print "result of min func = ",minimize_polinomial
     s_sum_t=0 #сумма квадратов текущего вывода функции отклонения
@@ -541,13 +586,15 @@ def lsqmas():
     """
     global shag
     dx0=np.zeros(len(mod_coef)+1) #отправная точка решения - все отклонения - нули
+    dx0=np.ones(len(mod_coef)+1) #отправная точка решения - все отклонения - единицы
+    dx0.fill(0.3)
     s_sum=[]
     shag=1
     y_from_model_mas=y_fr_model() # для ускорения считаем только 1 раз
     #ssnp=np.linalg.lstsq(mas.T,yexp1-y0m) #решение
     #ssfort=scipy.optimize.nnls(mas.T,yexp1-y0m)
     #sslsqscypy=scipy.optimize.leastsq(funk_fr_jac,mod_coef_delt)#np.array([inp_data.iloc[0][x] for x in mod_coef])
-    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,factor=0.1,ftol=0.01,xtol=0.01,full_output=1)
+    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,factor=0.1,ftol=0.001,xtol=0.01,full_output=1)
     ss=sslsqscypy
     np.set_printoptions(suppress=True,precision=3,edgeitems=10)
     print mod_coef
@@ -557,13 +604,20 @@ def lsqmas():
     print 'Ppgadd -',ss[0][-1]
     xbounded,rrrrel_x=boundX(dx2x(normolizeX_ob(ss[0][:-1])))
     plt.plot(s_sum);plt.show()
-    print 'var\texp\tsolve\tdiff'
+    print 'var\texp\tsolve\tdiff\tdiff/deriv'
     for pp,vv in enumerate(yexpvar):
         print vv,'\t',
         print y_from_model_mas[pp],'\t',
-        print y0m[pp]+np.dot(mas.T,normolizeX_ob(ss[0][:-1]))[pp],'\t',
-        print y_from_model_mas[pp]-y0m[pp]-np.dot(mas.T,-x0m+xbounded)[pp]
+        print y00[pp]+np.dot(mas.T,normolizeX_ob(ss[0][:-1]))[pp],'\t',
+        print y_from_model_mas[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp],'\t',
+        print (y_from_model_mas[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv]
     print '___'
+    stest=0
+    for pp,vv in enumerate(yexpvar):
+        #stest+=((y_from_model_mas[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv])**2
+        stest+=((Ppg_popravka(ss[0][-1]*4)[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv])**2
+        print vv,'\t',
+        print stest
 ##    print 'YYexp1'
 ##    print yexpvar
 ##    print y_from_model_mas

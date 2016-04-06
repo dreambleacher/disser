@@ -649,7 +649,7 @@ def search_derive_solver():
     3.
     4. профит!
     """
-    tgor1mas=np.random.normal(v.OG_T_gor[0],arch_var_deviation['Tgor1'],100)
+    tgor1mas=np.random.normal(v.OG_T_gor[0],arch_var_deviation['Tgor1'],10000)
     solvemass=[]
     for tgor1 in tgor1mas:
         y_from_model_mas=y_fr_model()
@@ -664,6 +664,10 @@ def search_derive_solver():
         ysol=y00+np.dot(mas.T,xsolb-x00)
         ysolvemass.append(ysol)
     ysolvedf=pd.DataFrame(ysolvemass,tgor1mas)
+    storeofds = pd.HDFStore(dirofdis+'tgor1mas10k.py')
+    storeofds['ysolvedf']=ysolvedf
+    storeofds['solvedf']=solvedf
+    storeofds.close()
 
 
 

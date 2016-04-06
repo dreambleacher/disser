@@ -22,7 +22,8 @@ u'SG_CfResL3',
 u'SG_CfResL4',
 u'YhqCor1_eqf',
 u'YhqCor2_eqf',
-u'YhqCor3_eqf'
+u'YhqCor3_eqf',
+u'Nin', u'Pazin', u'Pgpkin',u'Tpvdain', u'Tpvdbin'
 ]
 
 mod_coef_delta={

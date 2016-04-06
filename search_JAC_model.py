@@ -581,9 +581,10 @@ def f4minimise_buf(dxnorm,fullprint=True):
 def bound_test(dx):
     if abs(dx)>5.: return
 
-def lsqmas():
+def lsqmas(fullprint=True):
     u"""находим решение A(jac)x(param)-b(yexp)-min
     """
+    startobrsolve = time.time()
     global shag
     dx0=np.zeros(len(mod_coef)+1) #отправная точка решения - все отклонения - нули
     dx0=np.ones(len(mod_coef)+1) #отправная точка решения - все отклонения - единицы
@@ -594,15 +595,22 @@ def lsqmas():
     #ssnp=np.linalg.lstsq(mas.T,yexp1-y0m) #решение
     #ssfort=scipy.optimize.nnls(mas.T,yexp1-y0m)
     #sslsqscypy=scipy.optimize.leastsq(funk_fr_jac,mod_coef_delt)#np.array([inp_data.iloc[0][x] for x in mod_coef])
-    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,factor=0.1,ftol=0.001,xtol=0.01,full_output=1)
+    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,factor=0.1,ftol=0.001,xtol=0.01,full_output=1,args=(fullprint))
     ss=sslsqscypy
     np.set_printoptions(suppress=True,precision=3,edgeitems=10)
-    print mod_coef
-    print 'solve dxnorm-',ss[0]
-    print 'solve dx-',normolizeX_ob(ss[0][:-1])
-    print 'solve x-',dx2x(normolizeX_ob(ss[0][:-1]))
-    print 'Ppgadd -',ss[0][-1]
+    if fullprint:
+        print mod_coef
+        print 'solve dxnorm-',ss[0]
+        print 'solve dx-',normolizeX_ob(ss[0][:-1])
+        print 'solve x-',dx2x(normolizeX_ob(ss[0][:-1]))
+        print 'Ppgadd -',ss[0][-1]
     xbounded,rrrrel_x=boundX(dx2x(normolizeX_ob(ss[0][:-1])))
+    finishobrsolve = time.time()
+    if fullprint:
+        print '____________________________________________________'
+        print u"Скорость выполенения всего: ",(finishobrsolve - startobrsolve)/60.,u" минут"
+        print '____________________________________________________'
+    '''
     plt.plot(s_sum);plt.show()
     print 'var\texp\tsolve\tdiff\tdiff/deriv'
     for pp,vv in enumerate(yexpvar):
@@ -618,29 +626,35 @@ def lsqmas():
         stest+=((Ppg_popravka(ss[0][-1]*4)[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv])**2
         print vv,'\t',
         print stest
-##    print 'YYexp1'
-##    print yexpvar
-##    print y_from_model_mas
-##    print 'YYsolve'
-##    print y0m+np.dot(mas.T,normolizeX_ob(ss[0][:-1]))
-##    print 'yyexp1 - YYsolve'
-##    print y_from_model_mas-y0m-np.dot(mas.T,normolizeX_ob(ss[0][:-1]))
-##    print '___'
-    for pp in mod_coef:
-        print inp_data.iloc[0][pp],
-    #проверка:
-    #начальное приближение:
-    sumtr=0
-    for k in yexpvar:
-        sumtr+=(out_data.iloc[0][k]-arch_var[k])**2
-    print sumtr
-    #после решения:
-    sumtr1=0
-    ysolve=np.dot(mas.T,ss[0])
-    print y0m+ysolve
-    for i,k in enumerate(yexpvar):
-        sumtr1+=(y0m[i]+ysolve[i]-arch_var[k])**2
-    print sumtr1
+    '''
+    return ss[0]
+
+def solve_throught_arch():
+    u"""
+    идем через архив и решаем задачу
+    """
+    solvepointsm=range(0,3000,10)
+    solvemass=[]
+    for spoi in solvepointsm:
+        put_data_fileh5_model(spoi)
+        print v['OG_T_pvd1'],v['OG_T_pvd2']
+
+def search_derive_solver():
+    u"""
+    Ищем погрешность переменных (мощности в тч) после решения обр задачи
+    1. задаем погрешность входных данных
+    2. решаем по массиву с этой погрешностью
+    3.
+    4. профит!
+    """
+    tgor1mas=np.random.normal(v.OG_T_gor[0],arch_var_deviation['Tgor1'],2)
+    solvemass=[]
+    for tgor1 in tgor1mas:
+        y_from_model_mas=y_fr_model()
+        y_from_model_mas[0]=tgor1
+        solvemass.append(lsqmas(fullprint=False))
+
+
 
 
 def sumsq_vliyan():

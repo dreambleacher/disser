@@ -604,11 +604,12 @@ def lsqmas(fullprint=True):
         print 'solve dx-',normolizeX_ob(ss[0][:-1])
         print 'solve x-',dx2x(normolizeX_ob(ss[0][:-1]))
         print 'Ppgadd -',ss[0][-1]
-    xbounded,rrrrel_x=boundX(dx2x(normolizeX_ob(ss[0][:-1])))
+    xbounded,rrrrel_x=boundX(dx2x(normolizeX_ob(ss[0][:-1])),fullprint)
     finishobrsolve = time.time()
     if fullprint:
         print '____________________________________________________'
         print u"Скорость выполенения всего: ",(finishobrsolve - startobrsolve)/60.,u" минут"
+        print u"число шагов",shag
         print '____________________________________________________'
     '''
     plt.plot(s_sum);plt.show()
@@ -639,6 +640,7 @@ def solve_throught_arch():
         put_data_fileh5_model(spoi)
         print v['OG_T_pvd1'],v['OG_T_pvd2']
 
+
 def search_derive_solver():
     u"""
     Ищем погрешность переменных (мощности в тч) после решения обр задачи
@@ -647,12 +649,21 @@ def search_derive_solver():
     3.
     4. профит!
     """
-    tgor1mas=np.random.normal(v.OG_T_gor[0],arch_var_deviation['Tgor1'],2)
+    tgor1mas=np.random.normal(v.OG_T_gor[0],arch_var_deviation['Tgor1'],100)
     solvemass=[]
     for tgor1 in tgor1mas:
         y_from_model_mas=y_fr_model()
         y_from_model_mas[0]=tgor1
         solvemass.append(lsqmas(fullprint=False))
+    solvedf=pd.DataFrame(solvemass,tgor1mas)
+    ysolvemass=[]
+    for sspoi in solvemass:
+        dxsol=sspoi
+        xsol=dx2x(normolizeX_ob(dxsol[:-1]))
+        xsolb,rrrrrr=boundX(xsol,fullprint=False)
+        ysol=y00+np.dot(mas.T,xsolb-x00)
+        ysolvemass.append(ysol)
+    ysolvedf=pd.DataFrame(ysolvemass,tgor1mas)
 
 
 

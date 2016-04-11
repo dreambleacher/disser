@@ -650,13 +650,70 @@ def search_derive_solver():
     4. профит!
     """
     startobrsolvef = time.time()
-    tgor1mas=np.random.normal(v.OG_T_pvd1,arch_var_deviation['tpvd1'],10000)
+    #создаем массив значений вокруг эксперимент точки на которую натягиваем модель, массив со стандартным отклонением по погрешности
+    solvedfall={}
+    ysolvedfall={}
+    for iy,y in enumerate(yexpvar):
+        print iy,y,y_from_model_mas[iy],arch_var_deviation[y]
+        print arch_var_deviation[y]*100./y_from_model_mas[iy]
+        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],50)
+        ##tempmas=np.random.normal(v.OG_T_pvd1,arch_var_deviation['tpvd1'],10)
+        solvemass=[]
+        for tpar in tempmas:
+            y_from_model_mas=y_fr_model()
+            y_from_model_mas[iy]=tpar
+            solvemass.append(lsqmas(fullprint=False))
+        solvedf=pd.DataFrame(solvemass,tempmas) #массив решений dx
+        solvedf.index.name=y
+        ysolvemass=[]
+        for sspoi in solvemass:
+            dxsol=sspoi
+            xsol=dx2x(normolizeX_ob(dxsol[:-1]))
+            xsolb,rrrrrr=boundX(xsol,fullprint=False)
+            ysol=y00+np.dot(mas.T,xsolb-x00)
+            ysolvemass.append(ysol)
+        ysolvedf=pd.DataFrame(ysolvemass,tempmas,yexpvar) #массив парам модели после решений
+        ysolvedf.index.name=y
+        solvedfall[y]=solvedf
+        ysolvedfall[y]=ysolvedf
+        print ysolvedfall[y].std()*100./ysolvedfall[y].mean()
+    #storeofds = pd.HDFStore(dirofdis+'OG_T_pvd1mas10k.py')
+    #storeofds['ysolvedf']=ysolvedf
+    #storeofds['solvedf']=solvedf
+    #storeofds.close()
+    finishobrsolvef = time.time()
+    print '____________________________________________________'
+    print u"Скорость выполенения всего: ",(finishobrsolvef - startobrsolvef)/60.,u" минут"
+    print u"число шагов",shag
+    print '____________________________________________________'
+    '''
+    for iy,y in enumerate(yexpvar):
+        print iy,y,arch_var_deviation[y]*100./y_from_model_mas[iy]
+        print ysolvedfall[y].std()*100./ysolvedfall[y].mean()
+    '''
+    #шумим не по одной переменной, а всеми разом
+    startobrsolvef = time.time()
+    u"""создаем массив значений вокруг эксперимент точки на которую натягиваем модель, массив со стандартным отклонением по погрешности"""
+    solvedfall={}
+    ysolvedfall={}
+    y_from_model_mas=y_fr_model()
+    y_from_model_mas_o=y_fr_model()
+    y_new=[]
+    for iy,y in enumerate(yexpvar):
+        #print iy,y,y_from_model_mas[iy],arch_var_deviation[y]
+        #print arch_var_deviation[y]*100./y_from_model_mas[iy]
+        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],100)
+        ##tempmas=np.random.normal(v.OG_T_pvd1,arch_var_deviation['tpvd1'],10)
+        #solvemass=[]
+        #for tpar in tempmas:
+        #y_from_model_mas=y_fr_model()
+        y_new.append(tempmas)
+    y_new=np.array(y_new)
     solvemass=[]
-    for tgor1 in tgor1mas:
-        y_from_model_mas=y_fr_model()
-        y_from_model_mas[0]=tgor1
+    for i in range(50):
+        y_from_model_mas=y_new[:,i]
         solvemass.append(lsqmas(fullprint=False))
-    solvedf=pd.DataFrame(solvemass,tgor1mas)
+    solvedf=pd.DataFrame(solvemass) #массив решений dx
     ysolvemass=[]
     for sspoi in solvemass:
         dxsol=sspoi
@@ -664,18 +721,11 @@ def search_derive_solver():
         xsolb,rrrrrr=boundX(xsol,fullprint=False)
         ysol=y00+np.dot(mas.T,xsolb-x00)
         ysolvemass.append(ysol)
-    ysolvedf=pd.DataFrame(ysolvemass,tgor1mas)
-    storeofds = pd.HDFStore(dirofdis+'OG_T_pvd1mas10k.py')
-    storeofds['ysolvedf']=ysolvedf
-    storeofds['solvedf']=solvedf
-    storeofds.close()
-    finishobrsolvef = time.time()
-    print '____________________________________________________'
-    print u"Скорость выполенения всего: ",(finishobrsolvef - startobrsolvef)/60.,u" минут"
-    print u"число шагов",shag
-    print '____________________________________________________'
-
-
+    ysolvedf=pd.DataFrame(ysolvemass,columns=yexpvar) #массив парам модели после решений
+    print ysolvedf.std()*100./ysolvedf.mean()
+    #solvedfall[y]=solvedf
+    #ysolvedfall[y]=ysolvedf
+        #solvemass.append(lsqmas(fullprint=False))
 
 def sumsq_vliyan():
     u"""

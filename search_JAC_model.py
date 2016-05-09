@@ -7,9 +7,9 @@ from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-#from disser.def_vars import *
+from def_vars import *
 
-rc('font', **{'family': 'verdana'})
+rc('font', **{'family': 'verdana', 'size'   : 12})
 rc('text.latex', unicode=True)
 rc('text.latex', preamble='\usepackage[utf8]{inputenc}')
 rc('text.latex', preamble='\usepackage[russian]{babel}')
@@ -38,6 +38,34 @@ u'YhqCor2_eqf',
 u'YhqCor3_eqf',
 u'Nin', u'Pazin', u'Pgpkin',u'Tpvdain', u'Tpvdbin'
 ]
+
+mod_coef_lable={
+u'FLaSG1_CfResL':ur'$\xi_{пг1}$',
+u'FLaSG2_CfResL':ur'$\xi_{пг2}$',
+u'FLaSG3_CfResL':ur'$\xi_{пг3}$',
+u'FLaSG4_CfResL':ur'$\xi_{пг4}$',
+u'YD11D01_2_Hnom':ur'$k_{Gгцн1}$',
+u'YD12D01_2_Hnom':ur'$k_{Gгцн2}$',
+u'YD13D01_2_Hnom':ur'$k_{Gгцн3}$',
+u'YD14D01_2_Hnom':ur'$k_{Gгцн4}$',
+#u'YHSIEVE_TUN(1)',
+u'Loop_CfResL1':ur'$\xi_{гцк1}$',
+u'Loop_CfResL2':ur'$\xi_{гцк2}$',
+u'Loop_CfResL3':ur'$\xi_{гцк3}$',
+u'Loop_CfResL4':ur'$\xi_{гцк4}$',
+u'SG_CfResL1':ur'$\xi_{тр.пг1}$',
+u'SG_CfResL2':ur'$\xi_{тр.пг2}$',
+u'SG_CfResL3':ur'$\xi_{тр.пг3}$',
+u'SG_CfResL4':ur'$\xi_{тр.пг4}$',
+u'YhqCor1_eqf':ur'$k_{смеш1}$',
+u'YhqCor2_eqf':ur'$k_{смеш2}$',
+u'YhqCor3_eqf':ur'$k_{смеш3}$',
+u'Nin':ur'$N_{АЗ}$',
+u'Pazin':ur'$P_{АЗ}$',
+u'Pgpkin':ur'$P_{гпк}$',
+u'Tpvdain':ur'$t_{пвд1}$',
+u'Tpvdbin':ur'$t_{пвд2}$'
+}
 
 mod_coef_delt=[
 0.1,0.1,0.1,0.1,
@@ -82,7 +110,47 @@ yexpvar=[
 'gkgtn'
 ]
 
-
+yexpvar_lable={
+'Tgor1':ur'$t_{гор1},\ ^\circ C$',
+'Tgor2':ur'$t_{гор2},\ ^\circ C$',
+'Tgor3':ur'$t_{гор3},\ ^\circ C$',
+'Tgor4':ur'$t_{гор4},\ ^\circ C$',
+'Thol1':ur'$t_{хол1},\ ^\circ C$',
+'Thol2':ur'$t_{хол2},\ ^\circ C$',
+'Thol3':ur'$t_{хол3},\ ^\circ C$',
+'Thol4':ur'$t_{хол4},\ ^\circ C$',
+'dPgcn1':ur'$dP_{гцн1},\ МПа$',
+'dPgcn2':ur'$dP_{гцн2},\ МПа$',
+'dPgcn3':ur'$dP_{гцн3},\ МПа$',
+'dPgcn4':ur'$dP_{гцн4},\ МПа$',
+'Pzone1':ur'$P_{АЗ},\ МПа$',
+'Pzone2':ur'$dP_{АЗ},\ МПа$',
+'Ntep':'$Ntep$','Naz':'$Naz$','Nrr':'$Nrr$','N1k':'$N1k$','N2k':'$N2k$','Naknp':'$Naknp$','Nturb':'$Nturb$',
+'Tpv1':ur'$t_{пв1},\ ^\circ C$',
+'Tpv2':ur'$t_{пв2},\ ^\circ C$',
+'Tpv3':ur'$t_{пв3},\ ^\circ C$',
+'Tpv4':ur'$t_{пв4},\ ^\circ C$',
+'Gpv1':ur'$G_{пв1},\ \frac{кг}{м^3}$',
+'Gpv2':ur'$G_{пв2},\ \frac{кг}{м^3}$',
+'Gpv3':ur'$G_{пв3},\ \frac{кг}{м^3}$',
+'Gpv4':ur'$G_{пв4},\ \frac{кг}{м^3}$',
+'Ppg1':ur'$P_{пг1},\ МПа$',
+'Ppg2':ur'$P_{пг2},\ МПа$',
+'Ppg3':ur'$P_{пг3},\ МПа$',
+'Ppg4':ur'$P_{пг4},\ МПа$',
+'Pgpk':ur'$P_{гпк},\ МПа$',
+'tpvd1':ur'$t_{пвд1},\ ^\circ C$',
+'tpvd2':ur'$t_{пвд2},\ ^\circ C$',
+'ppvd1':ur'$P_{пвд1},\ МПа$',
+'ppvd2':ur'$P_{пвд2},\ МПа$',
+'gpvd1':ur'$G_{пвд1},\ \frac{кг}{м^3}$',
+'gpvd2':ur'$G_{пвд2},\ \frac{кг}{м^3}$',
+'ppv1':ur'$P_{пв1},\ МПа$',
+'ppv2':ur'$P_{пв2},\ МПа$',
+'ppv3':ur'$P_{пв3},\ МПа$',
+'ppv4':ur'$P_{пв4},\ МПа$',
+'gkgtn':ur'$G_{кгтн},\ \frac{кг}{м^3}$'
+}
 
 
 coef_bound=np.array([
@@ -166,7 +234,12 @@ u'tpvd2':0.1}
 dirofdis='G:/git_disser/disser/'
 #dirofdis='D:/git_py/' #work
 
+'''old-good 5 poi?
 storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0_by1.h5')
+'''
+'''new *10 points'''
+storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0_10points.h5')
+
 #dataindf=pd.DataFrame({'Nin':storeofd['Nin'],'pgpkin':storeofd['pgpkin'],'tpvd1in':storeofd['tpvd1in'],'tpvd2in':storeofd['tpvd2in'],'pazin':storeofd['pazin']})
 #storeofd['Nin']=pd.Series(optim_npmas.transpose()[1])
 #storeofd['pgpkin']=pd.Series(optim_npmas.transpose()[2])
@@ -221,7 +294,7 @@ def all_graf(vkey):
     for kk in yexpvar : #out_data.ix[qq.index].keys()
         plt.plot(qq[vkey],out_data.ix[qq.index][kk],'o')
         plt.plot(qqn[vkey],out_data.ix[qqn.index][kk],'r-')
-        plt.xlabel(vkey)
+        plt.xlabel(mod_coef_lable[vkey])
         plt.ylabel(kk+'\t'+str(deriv_test[kk]))
         if abs(plt.ylim()[1]-plt.ylim()[0])<deriv_test[kk]:
             print kk,'\tout of limits'
@@ -266,6 +339,7 @@ def JAC_from_arch(vkey,pr_opt=False):
     '''
     qqn=qq[qq[vkey]!=qq[vkey][0]] #выбрали только изменения переменной vkey в архиве
     der={}
+    derfit={}
     for kk in yexpvar: #out_data.ix[qq.index].keys()
         if abs(out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min())<0.1*arch_var_deviation[kk]:
             u'''если на всем интервале изменения параметра модели
@@ -297,35 +371,51 @@ def JAC_from_arch(vkey,pr_opt=False):
                 if pr_opt: print "!!!bad deriv",
                 der[kk]=0
                 outlim2.append(vkey+'\t'+kk)
+        #fit
+        yfit=out_data.ix[qqn.index][kk].values
+        xfit=qqn[vkey].values
+        def ffit(x,a,b):
+            return a*x+b
+        solvefit,solvefitcov=scipy.optimize.curve_fit(ffit,xfit,yfit)
+        yfplt=ffit(xfit,*solvefit)
+        derfit[kk]=solvefit[0]
+        if pr_opt:print kk, der[kk], derfit[kk]
+
         u"""секция вывода на графики
+        #fig = plt.figure()
+        plt.plot(xfit,yfplt,'g-')
         plt.plot(qq[vkey],out_data.ix[qq.index][kk],'o')
-        plt.plot(qqn[vkey],out_data.ix[qqn.index][kk],'r-')
-        plt.xlabel(vkey)
-        plt.ylabel(kk+'   deriv='+str(arch_var_deviation[kk]))
+        #plt.plot(qqn[vkey],out_data.ix[qqn.index][kk], 'r+',yerr=3.0)
+        plt.errorbar(qqn[vkey],out_data.ix[qqn.index][kk], yerr=arch_var_deviation[kk]/2.,fmt='o',color='red')
+        plt.xlabel(mod_coef_lable[vkey],fontsize=16)
+        plt.ylabel(yexpvar_lable[kk],fontsize=16)
+        #plt.ylabel(kk+'   deriv='+str(arch_var_deviation[kk]))
         if abs(plt.ylim()[1]-plt.ylim()[0])<arch_var_deviation[kk]:
             print kk,'\tout of limits'
             plt.ylim((out_data.ix[qqn.index][kk].mean()-arch_var_deviation[kk],out_data.ix[qqn.index][kk].mean()+arch_var_deviation[kk]))
         plt.show()
+        #fig.savefig(dirofdis+'plt2/'+kk+'_'+vkey+'.png')
         #"""
         if pr_opt: print
         if pr_opt: print
-    return der
+    return derfit
 
-def all_JAC():
+def all_JAC(pr_opt=False):
     jac={}
     for jj in mod_coef: #inp_data.keys().drop(u'YHSIEVE_TUN')
+        if pr_opt: print jj
         jac[jj]=JAC_from_arch(jj)
     return jac
 
-def jac_2_matrix(jac):
+def jac_2_matrix(jac,pr_opt=False):
     mas=[]
     for jj in mod_coef: #inp_data.keys().drop(u'YHSIEVE_TUN')
         masinp=[]
         for ij in yexpvar: #out_data.ix[qq.index].keys()
             masinp.append(jac[jj][ij])
-            print jj,ij,jac[jj][ij]
+            if pr_opt: print jj,ij,jac[jj][ij]
         mas.append(masinp)
-        print jj,masinp
+        if pr_opt: print jj,masinp
     mas=np.array(mas)
     return mas  # mas - матрица якобиана в виде np.array, строки, столбцы -yexpvar,mod_coef
 
@@ -336,10 +426,24 @@ def search_changes_jac():
     u"""
     ищем изменения якобиана в зависимости от начальной точки
     """
-    files_arr=['liner_JAC_model_x0_by1.h5',r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 159.0.h5',
-                r'liner_JAC_model_x098.0, 60.9, 215.0, 215.0, 160.0.h5',r'liner_JAC_model_x0100.0, 60.9, 220, 215.0, 160.0.h5',
-                r'liner_JAC_model_x0100.0, 61.3, 215, 215.0, 160.0.h5']
-    arr_names=['beg','p159','n98','t220','p2_61_3']
+    files_arr=['liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0_10points.h5',
+                r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 159.0.h5',
+                r'liner_JAC_model_x098.0, 60.9, 215.0, 215.0, 160.0.h5',
+                r'liner_JAC_model_x0100.0, 60.9, 220, 215.0, 160.0.h5',
+                r'liner_JAC_model_x0100.0, 61.3, 215, 215.0, 160.0.h5',
+                r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0FLaSG1_CfResL_2.0_10.h5',
+                r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0YD11D01_2_Hnom_110.0_10.h5',
+                r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0Loop_CfResL1_1.5_10.h5',
+                r'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0SG_CfResL1_2.5_10.h5']
+    arr_names=['beg',
+                'p159',
+                'n98',
+                't220',
+                'p2_61_3',
+                'FLaSG1_CfResL',
+                'YD11D01_2_Hnom',
+                'Loop_CfResL1',
+                'SG_CfResL1'                ]
     jacdict={}
     for i,fl in enumerate(files_arr):
         storeofd = pd.HDFStore(dirofdis+fl)
@@ -360,6 +464,27 @@ def search_changes_jac():
 ##        dx_norm=dx/normcoef_mas
         jacdict[arr_names[i]]=jdf
     jacpnl=pd.Panel(jacdict)
+    #show smth
+    #search
+    for ex in yexpvar:
+        print ex
+        pd.options.display.float_format = '{:,.3f}'.format
+        pd.set_option('expand_frame_repr', True)
+        cond=abs(jacpnl.major_xs(ex).T.mean()*ncdf/arch_var_deviation[ex])>0.1
+        print ((jacpnl.major_xs(ex).T*ncdf/arch_var_deviation[ex]).T)[cond] #normirovanniy jac
+        print
+        print
+    #old
+    jacpnl.major_xs(u'Tgor1')[cond].T.std()*100./jacpnl.major_xs(u'Tgor1')[cond].T.mean()
+    normcoef={}
+    for par in mod_coef:
+        normcoef[par]=mod_coef_delta[par][1]-mod_coef_delta[par][0]
+    ncdf=pd.Series(normcoef)
+    jacpnl.major_xs(u'Tgor1').T.mean()*ncdf/arch_var_deviation[u'Tgor1']
+    cond=abs(jacpnl.major_xs(u'Tgor1').T.mean()*ncdf/arch_var_deviation[u'Tgor1'])>0.1
+    jacpnl.major_xs(u'Tgor1').T.std()*ncdf/arch_var_deviation[u'Tgor1']
+
+
 
 def test():
     u"""Проверили правильность якобиана, все ок
@@ -576,26 +701,165 @@ def f4minimise_buf(dxnorm,fullprint=True):
         print "sum of sqr func= ",s_sum_t
     return minimize_polinomial
 
+def newton_gauss():
+    u"""ищем решение методом ньютона гауса
+    f(x0+dd)=f(x0)+Jac*dd
+    Smin(x0+dd)=normvec(y-f(x0)-Jac**dd)**2
+    take derive
+    (JacT*Jac)dd=JacT(y-f(x0))
+    dd=(JacT*Jac)**-1*JacT(y-f(x0))
+    """
+    #jac=all_JAC()
+    u"""linear search solve
+    jdfn['Nin']
+    """
+    #new psevd datch
+    #ypsev1=(x1-x2)/(0.2*normcoef_mas[i])
+
+    #1
+    #Jypsev.append(np.zeros(24)) #FLaSG1_CfResL-FLaSG2_CfResL
+    normcoef={}
+    for par in mod_coef:
+        normcoef[par]=mod_coef_delta[par][1]-mod_coef_delta[par][0]
+    normcoef_mas=np.array([normcoef[p] for p in mod_coef])
+    Jypsev1=np.zeros(24) #FLaSG1_CfResL-FLaSG2_CfResL
+    Jypsev1[0]=1./(0.2*normcoef_mas[0]) #dypsev/dx1
+    Jypsev1[1]=-1./(0.2*normcoef_mas[0])
+
+    Jypsev2=np.zeros(24) #FLaSG1_CfResL-FLaSG3_CfResL
+    Jypsev2[0]=1./(0.2*normcoef_mas[0]) #dypsev/dx1
+    Jypsev2[2]=-1./(0.2*normcoef_mas[0])
+    Jypsev=np.concatenate(([Jypsev1],[Jypsev2]))
+
+    Jypsev3=np.zeros(24) #FLaSG1_CfResL-FLaSG4_CfResL
+    Jypsev3[0]=1./(0.2*normcoef_mas[0]) #dypsev/dx1
+    Jypsev3[3]=-1./(0.2*normcoef_mas[0])
+    Jypsev=np.concatenate((Jypsev,[Jypsev3]))
+
+    Jypsev4=np.zeros(24) #Loop_CfResL1-Loop_CfResL2
+    Jypsev4[8]=1./(0.2*normcoef_mas[8]) #dypsev/dx1
+    Jypsev4[9]=-1./(0.2*normcoef_mas[8])
+    Jypsev=np.concatenate((Jypsev,[Jypsev4]))
+
+    Jypsev5=np.zeros(24) #Loop_CfResL1-Loop_CfResL3
+    Jypsev5[8]=1./(0.2*normcoef_mas[8]) #dypsev/dx1
+    Jypsev5[10]=-1./(0.2*normcoef_mas[8])
+    Jypsev=np.concatenate((Jypsev,[Jypsev5]))
+
+    Jypsev6=np.zeros(24) #Loop_CfResL1-Loop_CfResL4
+    Jypsev6[8]=1./(0.2*normcoef_mas[8]) #dypsev/dx1
+    Jypsev6[11]=-1./(0.2*normcoef_mas[8])
+    Jypsev=np.concatenate((Jypsev,[Jypsev6]))
+
+    Jypsev7=np.zeros(24) #SG_CfResL1-SG_CfResL2
+    Jypsev7[12]=1./(0.2*normcoef_mas[12]) #dypsev/dx1
+    Jypsev7[13]=-1./(0.2*normcoef_mas[12])
+    Jypsev=np.concatenate((Jypsev,[Jypsev7]))
+
+    Jypsev8=np.zeros(24) #SG_CfResL1-SG_CfResL2
+    Jypsev8[12]=1./(0.2*normcoef_mas[12]) #dypsev/dx1
+    Jypsev8[14]=-1./(0.2*normcoef_mas[12])
+    Jypsev=np.concatenate((Jypsev,[Jypsev8]))
+
+    Jypsev9=np.zeros(24) #SG_CfResL1-SG_CfResL2
+    Jypsev9[12]=1./(0.2*normcoef_mas[12]) #dypsev/dx1
+    Jypsev9[15]=-1./(0.2*normcoef_mas[12])
+    Jypsev=np.concatenate((Jypsev,[Jypsev9]))
 
 
-def bound_test(dx):
-    if abs(dx)>5.: return
+    yexp1=Ppg_popravka(0)
+    yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
+    jdf=pd.DataFrame(jac)
+    jdfn=(jdf.T/pd.Series(arch_var_deviation)).T
+    JT=jac_2_matrix(jdfn) #normir jac
 
-def lsqmas(fullprint=True):
+    Jn=np.concatenate((JT.T,Jypsev))
+    JT=Jn.T
+
+    #JT=mas #JacT
+    JTJ=np.dot(JT,JT.T)
+    JTJ1=np.linalg.inv(JTJ)
+    def search_sum(delta):
+        return (((-yexp1+y00)/yexperr+np.dot(JT.T,delta))**2).sum()
+    '''
+    #test
+    dsea=np.dot(JT[19],(yexp1-y00)/yexperr)/np.dot(JT[19],JT[19])
+    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.3987,0,0,0,0])
+    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.3987+1,0,0,0,0])
+    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.3987-1,0,0,0,0])
+    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.2424,0,0,0,0])
+    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10.88,0,0,0,0])
+    JT[19].shape
+    '''
+    #new rules with psewdo
+    yexpadd=np.zeros(JT.shape[1]-yexp1.shape[0])
+    yexp1=np.append(yexp1,yexpadd)
+    yexperradd=np.ones(JT.shape[1]-yexperr.shape[0]) #perepravit!
+    yexperr=np.append(yexperr,yexperradd*2)
+    y00add=np.zeros(JT.shape[1]-y00.shape[0])
+    y00=np.append(y00,y00add)
+
+
+    dsal=np.dot((np.linalg.inv(np.dot(JT,JT.T))) , np.dot(JT,(yexp1-y00)/yexperr)) #to4noe reshenie
+    print search_sum(dsal)
+    print dsal
+    def tfunc(delta):
+        return ((-yexp1+y00)/yexperr+np.dot(JT.T,delta))
+    dsalscp=scipy.optimize.leastsq(tfunc,np.ones(24))
+    print search_sum(dsalscp[0])
+    dsalscp=scipy.optimize.least_squares(tfunc,np.zeros(24))
+    print search_sum(dsalscp[0])
+    '''print search_sum(np.array([ -7.03275063e+01,   4.08501520e+01,  -5.99512738e+01,
+        -1.00291685e+01,   8.14418756e+01,  -1.61208095e+02,
+         1.12992421e+02,  -8.09092602e+01,  -3.01707768e+02,
+        -7.32901628e+02,  0.96066910e+03,   3.45987681e+03,
+         8.97178109e+02,   2.25593723e+03,   1.50063238e+04,
+        -1.04666363e+04,   4.77232656e+06,   1.98722518e+06,
+         3.74079333e+06,   3.46069432e+01,  -1.15170343e+02,
+         2.40458896e+01,   8.86087526e+00,   6.39385806e+00]))'''
+    print search_sum(dsal)
+
+
+
+
+    dds=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00)/yexperr)
+
+    dds=np.dot(JTJ1,np.dot(JT,(yexp1-y00-np.dot(JT.T,np.array([0.1,0.1,0.1,0.1,14,14,14,14,0,0,0,0,0,0,0,0,0,0,0,8,2,1,10,10])))/yexperr))
+    mnojt=np.dot(JTJ1,JT)
+    ddlm=np.dot(JTJ1,JT)
+    ##dds=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00))
+    ##dds2=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00-np.dot(mas.T,dds)))
+    ##dds1=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00)/yexperr)
+    dds0=dds.fill(0.0)
+    dds0=dds
+    for inw in range(10):
+        #dds1=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00-np.dot(mas.T,dds0))/yexperr)
+        dds1=np.dot(np.linalg.inv(np.dot(mas,mas.T)),np.dot(mas,(yexp1-y00-np.dot(mas.T,dds0))/yexperr))
+        for ide,de in enumerate(dds1):
+            if de<0:dds1[ide]=0
+            if de>200:dds1[ide]=200
+        dds0=dds1
+        print dds1
+
+
+##def bound_test(dx):
+##    if abs(dx)>5.: return
+
+def lsqmas(fullprint=False):
     u"""находим решение A(jac)x(param)-b(yexp)-min
     """
     startobrsolve = time.time()
     global shag
     dx0=np.zeros(len(mod_coef)+1) #отправная точка решения - все отклонения - нули
     dx0=np.ones(len(mod_coef)+1) #отправная точка решения - все отклонения - единицы
-    dx0.fill(0.3)
+    dx0.fill(0.1)
     s_sum=[]
     shag=1
     y_from_model_mas=y_fr_model() # для ускорения считаем только 1 раз
     #ssnp=np.linalg.lstsq(mas.T,yexp1-y0m) #решение
     #ssfort=scipy.optimize.nnls(mas.T,yexp1-y0m)
     #sslsqscypy=scipy.optimize.leastsq(funk_fr_jac,mod_coef_delt)#np.array([inp_data.iloc[0][x] for x in mod_coef])
-    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,factor=0.1,ftol=0.001,xtol=0.01,full_output=1,args=(fullprint))
+    sslsqscypy=scipy.optimize.leastsq(f4minimise_buf,dx0,epsfcn=0.01,maxfev =300, factor=0.1,full_output=1,args=(fullprint))#ftol=0.001,xtol=0.01,
     ss=sslsqscypy
     np.set_printoptions(suppress=True,precision=3,edgeitems=10)
     if fullprint:
@@ -624,8 +888,10 @@ def lsqmas(fullprint=True):
     stest=0
     for pp,vv in enumerate(yexpvar):
         #stest+=((y_from_model_mas[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv])**2
-        stest+=((Ppg_popravka(ss[0][-1]*4)[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv])**2
+        stest1par=((Ppg_popravka(ss[0][-1]*4)[pp]-y00[pp]-np.dot(mas.T,-x00+xbounded)[pp])/arch_var_deviation[vv])**2
+        stest+=stest1par
         print vv,'\t',
+        print stest1par,'\t',
         print stest
     '''
     return ss[0]

@@ -8,12 +8,14 @@ import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
 from def_vars import *
+import os
 
 rc('font', **{'family': 'verdana', 'size'   : 12})
 rc('text.latex', unicode=True)
 rc('text.latex', preamble='\usepackage[utf8]{inputenc}')
 rc('text.latex', preamble='\usepackage[russian]{babel}')
 
+locale.setlocale(locale.LC_ALL,'rus')
 
 mod_coef=[
 u'FLaSG1_CfResL',
@@ -230,9 +232,10 @@ u'tpvd1':0.1,
 u'tpvd2':0.1}
 
 
-
-dirofdis='G:/git_disser/disser/'
-#dirofdis='D:/git_py/' #work
+if os.environ['COMPUTERNAME']=='MOLEV':
+    dirofdis='D:/git_py/' #work
+else:
+    dirofdis='G:/git_disser/disser/' #home
 
 '''old-good 5 poi?
 storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0_by1.h5')
@@ -340,6 +343,7 @@ def JAC_from_arch(vkey,pr_opt=False):
     qqn=qq[qq[vkey]!=qq[vkey][0]] #выбрали только изменения переменной vkey в архиве
     der={}
     derfit={}
+    x0fit={}
     for kk in yexpvar: #out_data.ix[qq.index].keys()
         if abs(out_data.ix[qqn.index][kk].max()-out_data.ix[qqn.index][kk].min())<0.1*arch_var_deviation[kk]:
             u'''если на всем интервале изменения параметра модели
@@ -379,7 +383,8 @@ def JAC_from_arch(vkey,pr_opt=False):
         solvefit,solvefitcov=scipy.optimize.curve_fit(ffit,xfit,yfit)
         yfplt=ffit(xfit,*solvefit)
         derfit[kk]=solvefit[0]
-        if pr_opt:print kk, der[kk], derfit[kk]
+        x0fit[kk]=solvefit[1]
+        if pr_opt:print kk, der[kk], derfit[kk], x0fit[kk]
 
         u"""секция вывода на графики
         #fig = plt.figure()
@@ -398,14 +403,15 @@ def JAC_from_arch(vkey,pr_opt=False):
         #"""
         if pr_opt: print
         if pr_opt: print
-    return derfit
+    return derfit,x0fit
 
 def all_JAC(pr_opt=False):
     jac={}
+    x0masfit={}
     for jj in mod_coef: #inp_data.keys().drop(u'YHSIEVE_TUN')
         if pr_opt: print jj
-        jac[jj]=JAC_from_arch(jj)
-    return jac
+        jac[jj],x0masfit[jj]=JAC_from_arch(jj)
+    return jac,x0masfit
 
 def jac_2_matrix(jac,pr_opt=False):
     mas=[]
@@ -419,8 +425,9 @@ def jac_2_matrix(jac,pr_opt=False):
     mas=np.array(mas)
     return mas  # mas - матрица якобиана в виде np.array, строки, столбцы -yexpvar,mod_coef
 
-jac=all_JAC()
+jac,x0masfit=all_JAC()
 mas=jac_2_matrix(jac)
+masx0=jac_2_matrix(x0masfit)
 
 def search_changes_jac():
     u"""
@@ -454,7 +461,7 @@ def search_changes_jac():
         y0m=np.array([out_data.iloc[0][x] for x in yexpvar])
         x0=inp_data.iloc[0]
         x0m=np.array([inp_data.iloc[0][x] for x in mod_coef])
-        jac=all_JAC()
+        jac,x0masfit=all_JAC()
         jdf=pd.DataFrame(jac)
 ##        jdfxnorm=jdf.copy()
 ##        for par in mod_coef:
@@ -701,23 +708,12 @@ def f4minimise_buf(dxnorm,fullprint=True):
         print "sum of sqr func= ",s_sum_t
     return minimize_polinomial
 
-def newton_gauss():
-    u"""ищем решение методом ньютона гауса
-    f(x0+dd)=f(x0)+Jac*dd
-    Smin(x0+dd)=normvec(y-f(x0)-Jac**dd)**2
-    take derive
-    (JacT*Jac)dd=JacT(y-f(x0))
-    dd=(JacT*Jac)**-1*JacT(y-f(x0))
-    """
-    #jac=all_JAC()
-    u"""linear search solve
-    jdfn['Nin']
-    """
-    #new psevd datch
-    #ypsev1=(x1-x2)/(0.2*normcoef_mas[i])
 
-    #1
-    #Jypsev.append(np.zeros(24)) #FLaSG1_CfResL-FLaSG2_CfResL
+def restrict_JAC(JT):
+    u"""
+    добавляем к матрице Якоби члены для ограничения коэффициентов (по удалению их друг от друга)
+    также добавляем поправку к давлениям ПГ
+    """
     normcoef={}
     for par in mod_coef:
         normcoef[par]=mod_coef_delta[par][1]-mod_coef_delta[par][0]
@@ -766,65 +762,169 @@ def newton_gauss():
     Jypsev9[15]=-1./(0.2*normcoef_mas[12])
     Jypsev=np.concatenate((Jypsev,[Jypsev9]))
 
-
-    yexp1=Ppg_popravka(0)
-    yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
-    jdf=pd.DataFrame(jac)
-    jdfn=(jdf.T/pd.Series(arch_var_deviation)).T
-    JT=jac_2_matrix(jdfn) #normir jac
-
     Jn=np.concatenate((JT.T,Jypsev))
-    JT=Jn.T
+    JTrestr=(Jn.T).copy()
 
-    #JT=mas #JacT
-    JTJ=np.dot(JT,JT.T)
+    #add PG poprav:
+    pgadd=np.zeros(54)
+    pgadd[29]=1.
+    pgadd[30]=1.
+    pgadd[31]=1.
+    pgadd[32]=1.
+    JTpga=np.concatenate((JTrestr,[pgadd]))
+    JTrestr=JTpga
+    return JTrestr
+
+def restrict_y0(y0,JTrestr):
+    u"""
+    y0 - y0m - начальная точка
+    JTrestr - новый якобиан с ограничениями
+    приводим начальную точку модели к размерности нового ограниченного якобиана
+    """
+    y00add=np.zeros(JTrestr.shape[1]-y0.shape[0]) #ставим все нули!
+    y0restr=(np.append(y0,y00add)).copy()
+    return y0restr
+
+def restrict_yexp(yexp,JTrestr):
+    u"""
+    yexp - yexp1 - экспериментальный срез из блока
+    JTrestr - новый якобиан с ограничениями
+    приводим начальную точку модели к размерности нового ограниченного якобиана
+    """
+    yexpadd=np.zeros(JTrestr.shape[1]-yexp.shape[0]) #ставим все нули!
+    yexprestr=(np.append(yexp,yexpadd)).copy()
+    return yexprestr
+
+def restrict_yexperr(yexperr,JTrestr):
+    u"""
+    yexperr - yexperr - позволительная ошибка новых данных
+    JTrestr - новый якобиан с ограничениями
+    приводим начальную точку модели к размерности нового ограниченного якобиана
+    """
+    yexperradd=np.ones(JTrestr.shape[1]-yexperr.shape[0]) #perepravit!
+    yexperr_restr=(np.append(yexperr,yexperradd*2)).copy()
+    return yexperr_restr
+
+def search_sum(delta):
+    u"""
+    возвращаем сумму квадратов по дельте
+    """
+    return (((-yexp1+y0m)/yexperr+np.dot(JT.T,delta))**2).sum() #
+
+def func_by_delt(delta,JTnenorm,y0m):
+    u"""
+    возвращаем значения модели по параметрам
+    """
+    yf=y0m+np.dot(JTnenorm.T,delta)
+    return yf
+
+def otchet_func(delta):
+    u"""
+    даем полный отчет по функции по решению задачи
+    """
+    print "_________"
+    print "_________"
+    np.set_printoptions(precision=4,suppress=True)
+    for pmc in mod_coef:
+        print pmc+'\t',
+    print
+    print u"Дельта найденных коэффициентов"
+    print delta
+    print u"Найденные коэффициенты"
+    print np.append(x0m,0.)+delta
+    print "_________"
+    print u"функция"
+    for pmc in yexpvar:
+        print pmc+'\t',
+    print
+    yf=y0m+np.dot(JTnenorm.T,delta)
+    print yf
+    print u"разница с экспериментом"
+    yfd=y0m+np.dot(JTnenorm.T,delta)-yexp1
+    print yfd
+    print u"exp + разница с экспериментом построчно +err"
+    print
+    for i,pmc in enumerate(yexpvar):
+        print i,'\t',
+        print pmc,'\t',
+        print yf[i],'\t',
+        print yfd[i],'\t',
+        print yexperr[i],'\t',
+        print
+    print "_________"
+    print "_________"
+    print u"сумма квадратов"
+    print search_sum(delta)
+    print "_________"
+    print "_________"
+
+def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
+    u"""ищем решение методом ньютона гауса
+    JTnorm - нормированная(!!!) транспонированная матрица Якоби
+    yexp1 - экспериментальный срез
+    y0m - нулевая точка модели, от которой считаем функцию
+    yexperr - массив ошибок
+    f(x0+dd)=f(x0)+Jac*dd
+    Smin(x0+dd)=normvec(y-f(x0)-Jac**dd)**2
+    take derive
+    (JacT*Jac)dd=JacT(y-f(x0))
+    dd=(JacT*Jac)**-1*JacT(y-f(x0))
+    """
+    #jac=all_JAC()
+    u"""linear search solve
+    jdfn['Nin']
+    """
+    #global y0m
+    #new psevd datch
+    #ypsev1=(x1-x2)/(0.2*normcoef_mas[i])
+
+    #1
+    #Jypsev.append(np.zeros(24)) #FLaSG1_CfResL-FLaSG2_CfResL
+    np.set_printoptions(precision=4,suppress=True)
+
+    #yexp1=Ppg_popravka(0)
+    #yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
+    #jdf=pd.DataFrame(jac)
+    #jdfn=(jdf.T/pd.Series(arch_var_deviation)).T
+    #JTnenorm=jac_2_matrix(jdf)  #NEnormir jac
+    #JT=jac_2_matrix(jdfn) #normir jac
+    #Jnn=np.concatenate((JTnenorm.T,Jypsev))
+    #JTnenorm=Jnn.T
+    #JTpganenorm=np.concatenate((JTnenorm,[pgadd]))
+    #JTnenorm=JTpganenorm
+
+    JTJ=np.dot(JTnorm,JTnorm.T)
     JTJ1=np.linalg.inv(JTJ)
-    def search_sum(delta):
-        return (((-yexp1+y00)/yexperr+np.dot(JT.T,delta))**2).sum()
-    '''
-    #test
-    dsea=np.dot(JT[19],(yexp1-y00)/yexperr)/np.dot(JT[19],JT[19])
-    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.3987,0,0,0,0])
-    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.3987+1,0,0,0,0])
-    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,4.3987-1,0,0,0,0])
-    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2.2424,0,0,0,0])
-    search_sum([0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,10.88,0,0,0,0])
-    JT[19].shape
-    '''
-    #new rules with psewdo
-    yexpadd=np.zeros(JT.shape[1]-yexp1.shape[0])
-    yexp1=np.append(yexp1,yexpadd)
-    yexperradd=np.ones(JT.shape[1]-yexperr.shape[0]) #perepravit!
-    yexperr=np.append(yexperr,yexperradd*2)
-    y00add=np.zeros(JT.shape[1]-y00.shape[0])
-    y00=np.append(y00,y00add)
 
+    dsal=np.dot((np.linalg.inv(np.dot(JTnorm,JTnorm.T))) , np.dot(JTnorm,(yexp1-y0m)/yexperr)) #to4noe reshenie
+    if fullprint: otchet_func(dsal)
 
-    dsal=np.dot((np.linalg.inv(np.dot(JT,JT.T))) , np.dot(JT,(yexp1-y00)/yexperr)) #to4noe reshenie
-    print search_sum(dsal)
-    print dsal
-    def tfunc(delta):
-        return ((-yexp1+y00)/yexperr+np.dot(JT.T,delta))
-    dsalscp=scipy.optimize.leastsq(tfunc,np.ones(24))
-    print search_sum(dsalscp[0])
-    dsalscp=scipy.optimize.least_squares(tfunc,np.zeros(24))
-    print search_sum(dsalscp[0])
-    '''print search_sum(np.array([ -7.03275063e+01,   4.08501520e+01,  -5.99512738e+01,
-        -1.00291685e+01,   8.14418756e+01,  -1.61208095e+02,
-         1.12992421e+02,  -8.09092602e+01,  -3.01707768e+02,
-        -7.32901628e+02,  0.96066910e+03,   3.45987681e+03,
-         8.97178109e+02,   2.25593723e+03,   1.50063238e+04,
-        -1.04666363e+04,   4.77232656e+06,   1.98722518e+06,
-         3.74079333e+06,   3.46069432e+01,  -1.15170343e+02,
-         2.40458896e+01,   8.86087526e+00,   6.39385806e+00]))'''
-    print search_sum(dsal)
+    def tfunc(delta,JTnorm,yexp1,y0m):
+        #print delta
+        #summ.append(search_sum(delta))
+        return ((-yexp1+y0m)/yexperr+np.dot(JTnorm.T,delta))
+    def tfunc_jac(delta,JTnorm):
+        return JTnorm.T
+    xprib0=np.zeros(25) #начальное приближение решения
+    xprib0.fill(0.1)
+    xprib0[20]=-0.1
 
+    b1=(np.append(mod_coef_delta_m.T[0]-x0m,-np.inf),np.append(mod_coef_delta_m.T[1]-x0m,np.inf))
+    summ=[]
+    dsalscp=scipy.optimize.least_squares(tfunc,xprib0,bounds=b1, args=(JTnorm,yexp1,y0m))#jac=tfunc_jac,max_nfev =1000,diff_step=0.1
+#    plt.plot(summ)
+#    plt.xlabel(u'Шаг решения')
+#    plt.ylabel(u'Сумма квадратов нормы вектор-функции')
+#    plt.show()
 
+    if fullprint: otchet_func(dsalscp['x'])
+    memory1=dsalscp['x']
+    memory2=dsalscp['x']
+    memory3=dsalscp['x']
 
+    '''dds=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y0m)/yexperr)
 
-    dds=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00)/yexperr)
-
-    dds=np.dot(JTJ1,np.dot(JT,(yexp1-y00-np.dot(JT.T,np.array([0.1,0.1,0.1,0.1,14,14,14,14,0,0,0,0,0,0,0,0,0,0,0,8,2,1,10,10])))/yexperr))
+    dds=np.dot(JTJ1,np.dot(JT,(yexp1-y0m-np.dot(JT.T,np.array([0.1,0.1,0.1,0.1,14,14,14,14,0,0,0,0,0,0,0,0,0,0,0,8,2,1,10,10])))/yexperr))
     mnojt=np.dot(JTJ1,JT)
     ddlm=np.dot(JTJ1,JT)
     ##dds=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y00))
@@ -839,11 +939,9 @@ def newton_gauss():
             if de<0:dds1[ide]=0
             if de>200:dds1[ide]=200
         dds0=dds1
-        print dds1
+        print dds1'''
+    return dsalscp['x']
 
-
-##def bound_test(dx):
-##    if abs(dx)>5.: return
 
 def lsqmas(fullprint=False):
     u"""находим решение A(jac)x(param)-b(yexp)-min
@@ -900,11 +998,77 @@ def solve_throught_arch():
     u"""
     идем через архив и решаем задачу
     """
-    solvepointsm=range(0,3000,10)
+    global y0m
+    jac,x0masfit=all_JAC()
+    solvepointsm=range(0,5000,10)
     solvemass=[]
+    ysolmas=[]
+    startobrsolve = time.time()
+    jdf=pd.DataFrame(jac)
+    jdfn=(jdf.T/pd.Series(arch_var_deviation)).T
+    JTnenorm=jac_2_matrix(jdf)  #NEnormir jac
+    JT=jac_2_matrix(jdfn) #normir jac
+    yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
+    JT_restr=restrict_JAC(JT)
+    JTnenorm_restr=restrict_JAC(JTnenorm)
+    yexperr_restr=restrict_yexperr(yexperr,JT_restr)
+    y0_restr=restrict_y0(y0m,JT_restr)
     for spoi in solvepointsm:
         put_data_fileh5_model(spoi)
         print v['OG_T_pvd1'],v['OG_T_pvd2']
+        yexp1=y_fr_model()
+        yexp1_restr=restrict_yexp(yexp1,JT_restr)
+        sol=newton_gauss(JT_restr,yexp1_restr,y0_restr,yexperr_restr,fullprint=False)
+        solvemass.append(sol) #составляем массив решений задачи идя через архив
+        ysol=func_by_delt(sol,JTnenorm_restr,y0_restr)
+        ysolmas.append(ysol)
+    finishobrsolve = time.time()
+    print '____________________________________________________'
+    print u"Скорость выполенения всего: ",(finishobrsolve - startobrsolve)/60.,u" минут"
+    #print u"число шагов",shag
+    print '____________________________________________________'
+
+    #otchet:
+    ysolnpm=np.array(ysolmas)
+    #plt.plot(ysolnpm.T[0])
+    for pp in solvepointsm:
+        yexp_te=store['alldata'].iloc[range(0,1710,10)]['tgorp1_sr']
+    ysol_df=pd.DataFrame(ysolnpm.T[0],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи'])
+    yexp_te.name=u'Эксперимент'
+    ysol_df.plot()
+    #ysol_df.iloc[range(0,ysol_df.shape[0],10)].plot(yerr=3,style='+')
+    yexp_te.plot(legend=True,style='--')
+    #yexp_te.iloc[range(5,yexp_te.shape[0],10)].plot(style='r+',yerr=1)
+    #plt.style='red'
+    plt.xlabel(u"Время в архиве",fontsize=16)
+    plt.ylabel(yexpvar_lable[u"Tgor1"],fontsize=16)
+    plt.show()
+    (ysol_df.icol(0)-yexp_te).plot()
+    plt.hist(ysol_df.icol(0)-yexp_te,bins=20)
+    plt.xlabel(ur'$\Delta$'+yexpvar_lable[u"Tgor1"],fontsize=16)
+    plt.show()
+    print (ysol_df.icol(0)-yexp_te).mean(),(ysol_df.icol(0)-yexp_te).std() #sistem pogreshnost
+    #N1k
+    for pp in solvepointsm:
+        yexp_te=store['alldata'].iloc[range(0,1710,10)]['N1k']
+    ysol_df=pd.DataFrame(ysolnpm.T[14],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи'])
+    yexp_te.name=u'Эксперимент'
+    ysol_df.plot()
+    #ysol_df.iloc[range(0,ysol_df.shape[0],10)].plot(yerr=3,style='+')
+    yexp_te.plot(legend=True,style='--')
+    #yexp_te.iloc[range(5,yexp_te.shape[0],10)].plot(style='r+',yerr=1)
+    #plt.style='red'
+    plt.xlabel(u"Время в архиве",fontsize=16)
+    plt.ylabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    plt.xlabel(u"Время в архиве",fontsize=16)
+    plt.ylabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    (ysol_df.icol(0)-yexp_te).plot()
+    plt.hist(ysol_df.icol(0)-yexp_te,bins=20)
+    plt.xlabel(ur'$\Delta$'+yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    print (ysol_df.icol(0)-yexp_te).mean(),(ysol_df.icol(0)-yexp_te).std() #sistem pogreshnost
 
 
 def search_derive_solver():
@@ -919,26 +1083,31 @@ def search_derive_solver():
     #создаем массив значений вокруг эксперимент точки на которую натягиваем модель, массив со стандартным отклонением по погрешности
     solvedfall={}
     ysolvedfall={}
+    #yexp1=Ppg_popravka(0)
+    #yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
     for iy,y in enumerate(yexpvar):
         print iy,y,y_from_model_mas[iy],arch_var_deviation[y]
         print arch_var_deviation[y]*100./y_from_model_mas[iy]
-        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],50)
+        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],400) #набираем случайных значений
         ##tempmas=np.random.normal(v.OG_T_pvd1,arch_var_deviation['tpvd1'],10)
         solvemass=[]
         for tpar in tempmas:
-            y_from_model_mas=y_fr_model()
-            y_from_model_mas[iy]=tpar
-            solvemass.append(lsqmas(fullprint=False))
+            y_from_model_mas=y_fr_model() #берем решение из модели
+            y_from_model_mas[iy]=tpar #кладем туда возмущенные параметры
+            solvemass.append(newton_gauss(fullprint=False))
         solvedf=pd.DataFrame(solvemass,tempmas) #массив решений dx
         solvedf.index.name=y
         ysolvemass=[]
         for sspoi in solvemass:
             dxsol=sspoi
-            xsol=dx2x(normolizeX_ob(dxsol[:-1]))
-            xsolb,rrrrrr=boundX(xsol,fullprint=False)
-            ysol=y00+np.dot(mas.T,xsolb-x00)
+            #xsol=dx2x(normolizeX_ob(dxsol[:-1]))
+            #xsolb,rrrrrr=boundX(xsol,fullprint=False)
+            #ysol=y00+np.dot(mas.T,xsolb-x00)
+            ysol=func_by_delt(dxsol)
             ysolvemass.append(ysol)
-        ysolvedf=pd.DataFrame(ysolvemass,tempmas,yexpvar) #массив парам модели после решений
+        yexpvarpsev=list(yexpvar)
+        yexpvarpsev.extend(['psev1_1','psev1_2','psev1_3','psev2_1','psev2_2','psev2_3','psev3_1','psev3_2','psev3_3'])
+        ysolvedf=pd.DataFrame(ysolvemass,tempmas,yexpvarpsev) #массив парам модели после решений
         ysolvedf.index.name=y
         solvedfall[y]=solvedf
         ysolvedfall[y]=ysolvedf
@@ -950,8 +1119,50 @@ def search_derive_solver():
     finishobrsolvef = time.time()
     print '____________________________________________________'
     print u"Скорость выполенения всего: ",(finishobrsolvef - startobrsolvef)/60.,u" минут"
-    print u"число шагов",shag
+    #print u"число шагов",shag
     print '____________________________________________________'
+    print 'std=',ysolvedfall['Tgor1']['Tgor1'].std()
+    print 'std=',ysolvedfall['Tgor1']['Tgor1'].mean()
+    print 'std=',ysolvedfall['Tgor1']['Tgor1'].std()*100/ysolvedfall['Tgor1']['Tgor1'].mean()
+    plt.hist(ysolvedfall['Tgor1']['Tgor1'].values,bins=40)
+    plt.xlabel(yexpvar_lable[u"Tgor1"],fontsize=16)
+    plt.show()
+    plt.hist(ysolvedfall['Tgor1']['Tgor1'].index,bins=40)
+    plt.xlabel(yexpvar_lable[u"Tgor1"],fontsize=16)
+    plt.show()
+    print 'std=',ysolvedfall['Tgor1']['N1k'].std()
+    print 'std=',ysolvedfall['Tgor1']['N1k'].mean()
+    print 'std=',ysolvedfall['Tgor1']['N1k'].std()*100/ysolvedfall['Tgor1']['N1k'].mean()
+    plt.hist(ysolvedfall['Tgor1']['N1k'].values,bins=40)
+    plt.xlabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    plt.hist(ysolvedfall['N1k']['N1k'].index,bins=40)
+    plt.xlabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    plt.hist(ysolvedfall['N1k']['N1k'].values,bins=40)
+    plt.xlabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    plt.hist(ysolvedfall['N1k']['Tgor1'].values,bins=40)
+    plt.xlabel(yexpvar_lable[u"Tgor1"],fontsize=16)
+    plt.show()
+
+    print 'std=',ysolvedfall['Pgpk']['Pgpk'].std()
+    print 'std=',ysolvedfall['Pgpk']['Pgpk'].mean()
+    print 'std=',ysolvedfall['Pgpk']['Pgpk'].std()*100/ysolvedfall['Pgpk']['Pgpk'].mean()
+    plt.hist(ysolvedfall['Pgpk']['Pgpk'].values,bins=40)
+    plt.xlabel(yexpvar_lable[u"Pgpk"],fontsize=16)
+    plt.show()
+    plt.hist(ysolvedfall['Pgpk']['Pgpk'].index,bins=40)
+    plt.xlabel(yexpvar_lable[u"Pgpk"],fontsize=16)
+    plt.show()
+    print 'std=',ysolvedfall['Pgpk']['N1k'].std()
+    print 'std=',ysolvedfall['Pgpk']['N1k'].mean()
+    print 'std=',ysolvedfall['Pgpk']['N1k'].std()*100/ysolvedfall['Pgpk']['N1k'].mean()
+    plt.hist(ysolvedfall['Pgpk']['N1k'].values,bins=40)
+    plt.xlabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+
+
     '''
     for iy,y in enumerate(yexpvar):
         print iy,y,arch_var_deviation[y]*100./y_from_model_mas[iy]
@@ -968,7 +1179,7 @@ def search_derive_solver():
     for iy,y in enumerate(yexpvar):
         #print iy,y,y_from_model_mas[iy],arch_var_deviation[y]
         #print arch_var_deviation[y]*100./y_from_model_mas[iy]
-        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],100)
+        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],10000)
         ##tempmas=np.random.normal(v.OG_T_pvd1,arch_var_deviation['tpvd1'],10)
         #solvemass=[]
         #for tpar in tempmas:
@@ -976,19 +1187,33 @@ def search_derive_solver():
         y_new.append(tempmas)
     y_new=np.array(y_new)
     solvemass=[]
-    for i in range(50):
+    for i in range(y_new.shape[1]):
         y_from_model_mas=y_new[:,i]
-        solvemass.append(lsqmas(fullprint=False))
+        solvemass.append(newton_gauss(fullprint=False))
     solvedf=pd.DataFrame(solvemass) #массив решений dx
     ysolvemass=[]
     for sspoi in solvemass:
         dxsol=sspoi
-        xsol=dx2x(normolizeX_ob(dxsol[:-1]))
-        xsolb,rrrrrr=boundX(xsol,fullprint=False)
-        ysol=y00+np.dot(mas.T,xsolb-x00)
+        #xsol=dx2x(normolizeX_ob(dxsol[:-1]))
+        #xsolb,rrrrrr=boundX(xsol,fullprint=False)
+        #ysol=y00+np.dot(mas.T,xsolb-x00)
+        ysol=func_by_delt(dxsol)
         ysolvemass.append(ysol)
-    ysolvedf=pd.DataFrame(ysolvemass,columns=yexpvar) #массив парам модели после решений
+        ysolvemass.append(ysol)
+    yexpvarpsev=list(yexpvar)
+    yexpvarpsev.extend(['psev1_1','psev1_2','psev1_3','psev2_1','psev2_2','psev2_3','psev3_1','psev3_2','psev3_3'])
+    ysolvedf=pd.DataFrame(ysolvemass,columns=yexpvarpsev) #массив парам модели после решений
     print ysolvedf.std()*100./ysolvedf.mean()
+    finishobrsolvef = time.time()
+    print '____________________________________________________'
+    print u"Скорость выполенения всего: ",(finishobrsolvef - startobrsolvef)/60.,u" минут"
+    #print u"число шагов",shag
+    print '____________________________________________________'
+    ysolvedf['N1k'].hist(bins=40)
+    plt.xlabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.show()
+    for iy,y in enumerate(yexpvar):
+        print '{0:2d} {1:7s} {2:7.3f} {3:7.3f}'.format(iy, y, ysolvedf[y].std(),arch_var_deviation[y]) # {1} {5.3f} {45.3f}
     #solvedfall[y]=solvedf
     #ysolvedfall[y]=ysolvedf
         #solvemass.append(lsqmas(fullprint=False))
@@ -1018,6 +1243,15 @@ def sumsq_vliyan():
         sumder=sumend-sumbeg
         print '\t',sumder
 
+def oform_diss_exp_data():
+    u"""
+    оформление дисс, эсперимент данные
+    """
+    print store['alldata']['N1k'].index #date arch
+    store['alldata']['N1k'].plot()
+    plt.ylabel(yexpvar_lable[u"N1k"]+ur'$, МВт$',fontsize=16)
+    plt.xlabel(u"Время в архиве",fontsize=16)
+    plt.show()
 
 
 

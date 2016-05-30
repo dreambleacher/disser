@@ -18,14 +18,20 @@ import matplotlib.pyplot as plt
 from matplotlib import rc
 from freesteam import *
 import locale
+import os
 
+locale.setlocale(locale.LC_ALL,'rus')
 rc('font', **{'family': 'verdana'})
 rc('text.latex', unicode=True)
 rc('text.latex', preamble='\usepackage[utf8]{inputenc}')
 rc('text.latex', preamble='\usepackage[russian]{babel}')
 
 try:
-    dir2='g:/#work/#b3-svbu/'
+    if os.environ['COMPUTERNAME']=='MOLEV':
+        dir2='D:/work_place/serg/#b3-svbu/' #work
+    else:
+        dir2='g:/#work/#b3-svbu/' #home
+    #dir2='g:/#work/#b3-svbu/'
     store = pd.HDFStore(dir2+'store.h5')
 except IOError:
     print u'Нет доступа к директории ',dir2
@@ -43,7 +49,7 @@ for i,ind in enumerate(datab3.index):
 dtser=pd.Series(dt)
 indspan=dtser.index[dtser>61]+1
 
-def par_arch_std(par='N1k'):
+def par_arch_std(par='N1k',pltshow=False):
     u"""
     Функция поиска погрешностей разбитых на отрезки параметров архива
     """
@@ -55,11 +61,14 @@ def par_arch_std(par='N1k'):
         ib=ii
     serparstd=pd.Series(parstd)
     print '\t',par
-    print serparstd.describe()
+    #print serparstd.describe()
     print par,' 0  - ',datab3[par][0]
     print 'std %  - ',serparstd.mean()*100./datab3[par][0]
     print '________'
-    plt.plot(parstd);plt.show()
+    if pltshow:
+        plt.hist(parstd,bins=20)
+        plt.xlabel(yexpvar_lable[u"N1k"]+ur'$, МВт$',fontsize=16)
+        plt.show()
 
 for param in datab3.columns:
     #погрешности всех параметров

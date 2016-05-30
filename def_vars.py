@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import numpy as np
 
 mod_coef=[
 u'FLaSG1_CfResL',
@@ -156,7 +157,7 @@ arch_var_deviation=dict(
     Thol1=1.,Thol2=1.,Thol3=1.,Thol4=1.,
     dPgcn1=0.005*10.197,dPgcn2=0.005*10.197,dPgcn3=0.005*10.197,dPgcn4=0.005*10.197,
     Pzone1=0.11*10.197,Pzone2=10000000000., #ot baldi max 100
-    Ntep=100000000.,Naz=100000000.,Nrr=100000000.,N1k=100000000.,N2k=100000000.,Naknp=100000000.,Nturb=40., #ot baldi max 100
+    Ntep=100000000.,Naz=100000000.,Nrr=100000000.,N1k=40.,N2k=100000000.,Naknp=100000000.,Nturb=100000000., #ot baldi max 100
     Tpv1=100.,Tpv2=100.,Tpv3=100.,Tpv4=100.,#ot baldi
     Gpv1=97.,Gpv2=97.,Gpv3=97.,Gpv4=97.,
     Ppg1=0.07*10.197,Ppg2=0.07*10.197,Ppg3=0.07*10.197,Ppg4=0.07*10.197,

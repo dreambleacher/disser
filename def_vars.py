@@ -154,11 +154,11 @@ u'tpvd2':0.1}
 
 arch_var_deviation=dict(
     Tgor1=3.,Tgor2=3.,Tgor3=3.,Tgor4=3.,
-    Thol1=1.,Thol2=1.,Thol3=1.,Thol4=1.,
+    Thol1=3.,Thol2=3.,Thol3=3.,Thol4=3.,
     dPgcn1=0.005*10.197,dPgcn2=0.005*10.197,dPgcn3=0.005*10.197,dPgcn4=0.005*10.197,
     Pzone1=0.11*10.197,Pzone2=10000000000., #ot baldi max 100
-    Ntep=100000000.,Naz=100000000.,Nrr=100000000.,N1k=40.,N2k=100000000.,Naknp=100000000.,Nturb=100000000., #ot baldi max 100
-    Tpv1=100.,Tpv2=100.,Tpv3=100.,Tpv4=100.,#ot baldi
+    Ntep=100000000.,Naz=100000000.,Nrr=100000000.,N1k=100000000.,N2k=100000000.,Naknp=100000000.,Nturb=100000000., #ot baldi max 100,N1k=40.
+    Tpv1=3.,Tpv2=3.,Tpv3=3.,Tpv4=3.,#ot baldi
     Gpv1=97.,Gpv2=97.,Gpv3=97.,Gpv4=97.,
     Ppg1=0.07*10.197,Ppg2=0.07*10.197,Ppg3=0.07*10.197,Ppg4=0.07*10.197,
     Pgpk=0.01*10.197,#ot baldi

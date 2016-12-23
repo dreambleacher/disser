@@ -35,6 +35,7 @@ def out_param():
             Thol1=v["YA11T782"],Thol2=v["YA12T783"],Thol3=v["YA13T784"],Thol4=v["YA14T785"],
             dPgcn1=v["Y314B01"],dPgcn2=v["Y315B01"],dPgcn3=v["Y316B01"],dPgcn4=v["Y317B01"],
             Pzone1=v["Y065B022"],Pzone2=v["Y062B01"],
+            Gp1kgs=v["yafloop1_G"],Gp2kgs=v["yafloop2_G"],Gp3kgs=v["yafloop3_G"],Gp4kgs=v["yafloop4_G"],
             Ntep=v["YMINTPOWMWT"],Naz=v["pow_az"],Nrr=v["pow_rr"],N1k=v["pow_1k"],N2k=v["pow_2k"],Naknp=v["ycintcammwt"],Nturb=v["N_TURB_RL"],
             Tpv1=v[u"14МЦ1-1"],Tpv2=v[u"14МЦ2-1"],Tpv3=v[u"14МЦ3-1"],Tpv4=v[u"14МЦ4-1"],
             Gpv1=v[u"14МЦ115Б"],Gpv2=v[u"14МЦ215Б"],Gpv3=v[u"14МЦ315Б"],Gpv4=v[u"14МЦ415Б"],

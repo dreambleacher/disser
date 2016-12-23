@@ -7,7 +7,7 @@ from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-from def_vars import *
+#from def_vars import *
 import os
 
 rc('font', **{'family': 'verdana', 'size'   : 12})
@@ -837,10 +837,10 @@ def otchet_func(delta):
     for pmc in yexpvar:
         print pmc+'\t',
     print
-    yf=y0m+np.dot(JTnenorm.T,delta)
+    yf=y0m+np.dot(JTnenorm.T,delta[0:-1])
     print yf
     print u"разница с экспериментом"
-    yfd=y0m+np.dot(JTnenorm.T,delta)-yexp1
+    yfd=y0m+np.dot(JTnenorm.T,delta[0:-1])-yexp1
     print yfd
     print u"exp + разница с экспериментом построчно +err"
     print
@@ -854,7 +854,7 @@ def otchet_func(delta):
     print "_________"
     print "_________"
     print u"сумма квадратов"
-    print search_sum(delta)
+    print search_sum(delta[0:-1])
     print "_________"
     print "_________"
 
@@ -901,7 +901,7 @@ def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
 
     def tfunc(delta,JTnorm,yexp1,y0m):
         #print delta
-        #summ.append(search_sum(delta))
+        summ.append(search_sum(delta[0:-1])+delta[-1]*delta[-1])
         return ((-yexp1+y0m)/yexperr+np.dot(JTnorm.T,delta))
     def tfunc_jac(delta,JTnorm):
         return JTnorm.T
@@ -912,10 +912,11 @@ def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
     b1=(np.append(mod_coef_delta_m.T[0]-x0m,-np.inf),np.append(mod_coef_delta_m.T[1]-x0m,np.inf))
     summ=[]
     dsalscp=scipy.optimize.least_squares(tfunc,xprib0,bounds=b1, args=(JTnorm,yexp1,y0m))#jac=tfunc_jac,max_nfev =1000,diff_step=0.1
-#    plt.plot(summ)
-#    plt.xlabel(u'Шаг решения')
-#    plt.ylabel(u'Сумма квадратов нормы вектор-функции')
-#    plt.show()
+    if fullprint: plt.plot(summ)
+    if fullprint: plt.xlabel(u'Шаг решения')
+    if fullprint: plt.ylabel(u'Сумма квадратов нормы вектор-функции')
+    if fullprint: plt.yscale('log')
+    if fullprint: plt.show()
 
     if fullprint: otchet_func(dsalscp['x'])
     memory1=dsalscp['x']
@@ -940,7 +941,9 @@ def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
             if de>200:dds1[ide]=200
         dds0=dds1
         print dds1'''
-    return dsalscp['x']
+
+    #return dsalscp['x'] #решение методом наименьших квадратов
+    return dsal #точное решение
 
 
 def lsqmas(fullprint=False):
@@ -1000,7 +1003,7 @@ def solve_throught_arch():
     """
     global y0m
     jac,x0masfit=all_JAC()
-    solvepointsm=range(0,5000,10)
+    solvepointsm=range(0,1710,10)
     solvemass=[]
     ysolmas=[]
     startobrsolve = time.time()
@@ -1031,9 +1034,26 @@ def solve_throught_arch():
     #otchet:
     ysolnpm=np.array(ysolmas)
     #plt.plot(ysolnpm.T[0])
-    for pp in solvepointsm:
-        yexp_te=store['alldata'].iloc[range(0,1710,10)]['tgorp1_sr']
-    ysol_df=pd.DataFrame(ysolnpm.T[0],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи'])
+
+    #__
+    #grapf raznie
+    store['alldata'].iloc[range(0,1710,10)][['tgorp1_sr','tgorp2_sr','tgorp3_sr','tgorp4_sr']].plot()
+    store['alldata'].iloc[range(0,1710,10)][['tholp1_sr','tholp2_sr','tholp3_sr','tholp4_sr']].plot()
+    store['alldata'].iloc[range(0,1710,10)][['ppgcn1','ppgcn2','ppgcn3','ppgcn4']].plot()
+    store['alldata'].iloc[range(0,1710,10)][['tpitvpg1','tpitvpg2','tpitvpg3','tpitvpg4']].plot()
+    store['alldata'].iloc[range(0,1710,10)][['ppitv1','ppitv2','ppitv3','ppitv4']].plot()
+    store['alldata'].iloc[range(0,1710,10)][['nedgcn1','nedgcn2','nedgcn3','nedgcn4']].plot()
+    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn1'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn1'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp1_sr']+273.15)).plot()
+    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn2'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn2'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp2_sr']+273.15)).plot()
+    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn3'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn3'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp3_sr']+273.15)).plot()
+    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn4'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn4'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp4_sr']+273.15)).plot()
+    plt.show()
+    #__
+    #
+    #график температуры
+    #for pp in solvepointsm:
+    yexp_te=store['alldata'].iloc[range(0,1700,10)]['tgorp1_sr']
+    ysol_df=pd.DataFrame(ysolnpm.T[0],store['alldata'].iloc[range(0,1700,10)].index,columns=[u'Решение обратной задачи']) #прикручиваем временные индексы, длина  массива - 171, первые 171 значений с шагом - 10
     yexp_te.name=u'Эксперимент'
     ysol_df.plot()
     #ysol_df.iloc[range(0,ysol_df.shape[0],10)].plot(yerr=3,style='+')
@@ -1043,27 +1063,191 @@ def solve_throught_arch():
     plt.xlabel(u"Время в архиве",fontsize=16)
     plt.ylabel(yexpvar_lable[u"Tgor1"],fontsize=16)
     plt.show()
+    #____
+    #____
+    #график погрешности температуры
     (ysol_df.icol(0)-yexp_te).plot()
     plt.hist(ysol_df.icol(0)-yexp_te,bins=20)
     plt.xlabel(ur'$\Delta$'+yexpvar_lable[u"Tgor1"],fontsize=16)
     plt.show()
     print (ysol_df.icol(0)-yexp_te).mean(),(ysol_df.icol(0)-yexp_te).std() #sistem pogreshnost
+    #____
+
+    def calc_N_man(*data):
+        u"""
+        руками считаем мощность
+        требуются подпрограммы из reconcilliation_knpp3.py
+        последовательность архива:
+        0'Tgor1',1'Tgor2',2'Tgor3',3'Tgor4',4'Thol1',5'Thol2',6'Thol3',7'Thol4',8'dPgcn1',9'dPgcn2',10'dPgcn3',11'dPgcn4',
+        12'Pzone1',13'Pzone2','14Ntep','15Naz','16Nrr','17N1k','N2k','Naknp','Nturb','Tpv1','Tpv2','Tpv3','Tpv4','Gpv1','Gpv2','Gpv3','Gpv4',
+        'Ppg1','Ppg2','Ppg3','Ppg4','Pgpk','tpvd1','tpvd2','ppvd1','ppvd2','gpvd1','gpvd2','ppv1','ppv2','ppv3','ppv4','gkgtn'
+        """
+        N1kp1=N1kp(data[12]/10.197,data[0],data[12]/10.197,data[4],data[8]/10.197,50.,0*1000)
+        N1kp2=N1kp(data[12]/10.197,data[1],data[12]/10.197,data[5],data[9]/10.197,50.,0*1000)
+        N1kp3=N1kp(data[12]/10.197,data[2],data[12]/10.197,data[6],data[10]/10.197,50.,0*1000)
+        N1kp4=N1kp(data[12]/10.197,data[3],data[12]/10.197,data[7],data[11]/10.197,50.,0*1000)
+        N1k=N1kp1+N1kp2+N1kp3+N1kp4
+        return N1k
+
+
+    calc_N_man(*ysolnpm.T) # массив расчитанной мощности по 1к
+    #____
+    #test N
+    def N1kpf(Pgor,Tgor,Phol,Thol,Gktch,Ngcn=5.05*10**6):
+        u"""Определяем мощность петли по параметрам 1-го контура
+        Pgor - давление гор.петли, МВт (реально давление в реакторе)
+        Tgor - температура гор.нитки, Град С.
+        Phol - давление хол.петли, МВт (реально опять давление в реакторе)
+        Thol - температура хол.нитки, Град С.
+        dPgcn - перепад на ГЦН, МПа
+        Fgcn - частота питания ГЦН, Гц
+        #Gktch - расход через петлю, кт/ч
+        #Gpm3 - расход через петлю, м3/ч
+        Ngcn - Мощность электродвигателя ГЦН, Вт (нужна ли?)
+        """
+        #Rohol = steam_pT(Phol*10**6,Thol+273.15).rho #плотность холодной нитки, кг/м3 (проверить размерность)
+        Rohol = vec_steam_pTrho(Phol*10**6,Thol+273.15)
+        Gp = Gktch*10**6/3600 #расход через петлю, кг/с
+        #Gpm3=Gcnf(3,1,dPgcn,Fgcn,Rohol) #м3/ch
+        #Gp = Gpm3*Rohol/3600 #расход через петлю, кг/с
+        #Hgor = steam_pT(Pgor*10**6,Tgor+273.15).h #Энтальпия горячей нитки петли, Дж/кг, внутри стим требует давление в Па, температуру в Кельвинах
+        Hgor = vec_steam_pT(Pgor*10**6,Tgor+273.15)
+        #Hhol = steam_pT(Phol*10**6,Thol+273.15).h #Энтальпия холодной нитки петли, Дж/кг
+        Hhol = vec_steam_pT(Phol*10**6,Thol+273.15)
+        N1kp=Gp*(Hgor-Hhol)-Ngcn #Мощность петли, Вт=Дж/с
+        return N1kp/10**6 #возвращаем мощность в МВт
+    def N1kf(**args):
+        u"""Определяем мощность по параметрам 1-го контура
+        сумма по 4 петлям
+        """
+        N1kp1=N1kpf(args['preak'],args['tgorp1_sr'],args['preak'],args['tholp1_sr'],args['fpetl1'],args['nedgcn1']*10**3)
+        N1kp2=N1kpf(args['preak'],args['tgorp2_sr'],args['preak'],args['tholp2_sr'],args['fpetl2'],args['nedgcn2']*10**3)
+        N1kp3=N1kpf(args['preak'],args['tgorp3_sr'],args['preak'],args['tholp3_sr'],args['fpetl3'],args['nedgcn3']*10**3)
+        N1kp4=N1kpf(args['preak'],args['tgorp4_sr'],args['preak'],args['tholp4_sr'],args['fpetl4'],args['nedgcn4']*10**3)
+        N1k=N1kp1+N1kp2+N1kp3+N1kp4
+        fun = N1k# - args['N1k'] ошибка
+        return fun
+    yexp_teo=store['alldata'].iloc[range(0,1710,1)]['N1k']
+    yexp_te=N1kf(**store['alldata'].iloc[range(0,1710,1)])
+    yexp_teo.name=u'BASA'
+    yexp_te.name=u"my rasschet"
+    yexp_teo.plot(legend=True,style='-o')
+    yexp_te.plot(legend=True,style='-o')
+    yexp_teocalc=store['alldata'].iloc[range(0,1710,10)]['N1kcalc']
+    yexp_teocalc.name=u'BASE_calc'
+    yexp_teocalc.plot(legend=True,style='-o')
+    plt.show()
+
+
+
+    #__
     #N1k
-    for pp in solvepointsm:
-        yexp_te=store['alldata'].iloc[range(0,1710,10)]['N1k']
-    ysol_df=pd.DataFrame(ysolnpm.T[14],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи'])
-    yexp_te.name=u'Эксперимент'
-    ysol_df.plot()
+    #calc_N_man(*ysolnpm.T) # массив расчитанной мощности по 1к после реш задачи
+    #N1k(**store['alldata'].iloc[range(0,1710,10)]) #массив рассчитанной мощности по 1к по эксперим данным
+
+
+
+    yexp_te=N1k(**store['alldata'].iloc[range(0,1710,10)])
+    #ysol_df=pd.DataFrame(ysolnpm.T[14],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи ста'])
+    ysol_df=pd.DataFrame(calc_N_man(*ysolnpm.T),store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи'])
+    ysol_df_native=pd.DataFrame(ysolnpm.T[17],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'n1ksolvejac'])
+    yexp_te.name=u'Расчет по станционным данным'
+    ysol_df.plot(legend=True,style=':+')
+    ysol_df_native[u'n1ksolvejac'].plot(legend=True,style='-+')
     #ysol_df.iloc[range(0,ysol_df.shape[0],10)].plot(yerr=3,style='+')
-    yexp_te.plot(legend=True,style='--')
+    yexp_te.plot(legend=True,style='--.')
     #yexp_te.iloc[range(5,yexp_te.shape[0],10)].plot(style='r+',yerr=1)
     #plt.style='red'
     plt.xlabel(u"Время в архиве",fontsize=16)
     plt.ylabel(yexpvar_lable[u"N1k"],fontsize=16)
     plt.show()
+
+    #__
+    #N2k
+    def calc_N2k_man(*data):
+        u""" Мощность второго контура как сумма мощностей ПГ
+        руками считаем мощность
+        требуются подпрограммы из reconcilliation_knpp3.py
+        последовательность архива:
+        0'Tgor1',1'Tgor2',2'Tgor3',3'Tgor4',4'Thol1',5'Thol2',6'Thol3',7'Thol4',8'dPgcn1',9'dPgcn2',10'dPgcn3',11'dPgcn4',
+        12'Pzone1',13'Pzone2','14Ntep','15Naz','16Nrr','17N1k','18N2k','19Naknp','20Nturb','21Tpv1','22Tpv2','23Tpv3','24Tpv4',
+        '25Gpv1','26Gpv2','27Gpv3','28Gpv4',
+        '29Ppg1','30Ppg2','31Ppg3','32Ppg4','33Pgpk','34tpvd1','35tpvd2',
+        '36ppvd1','37ppvd2','38gpvd1','39gpvd2','40ppv1','41ppv2','42ppv3','43ppv4','44gkgtn'
+        """
+        Npg1=Npg(data[40]/10.197,data[21],data[25],data[29]/10.197,data[25],0)
+        Npg2=Npg(data[41]/10.197,data[22],data[26],data[30]/10.197,data[26],0)
+        Npg3=Npg(data[42]/10.197,data[23],data[27],data[31]/10.197,data[27],0)
+        Npg4=Npg(data[43]/10.197,data[24],data[28],data[32]/10.197,data[28],0)
+        N2k=Npg1+Npg2+Npg3+Npg4
+        return N2k
+
+    n2k_npp=N2k(**store['alldata'].iloc[range(0,1710,10)])
+    n2k_npp.name=u'Расчет по станционным данным'
+    #store['alldata'].iloc[range(0,1710,10)]['Npg'].plot(style='-o')
+    n2k_sol=pd.DataFrame(calc_N2k_man(*ysolnpm.T),store['alldata'].iloc[range(0,1710,10)].index,columns=[u'N2k-solve'])
+    n2k_sol[u'N2k-solve'].plot(legend=True,style='-+')
+    n2k_npp.plot(legend=True,style='--+')
     plt.xlabel(u"Время в архиве",fontsize=16)
-    plt.ylabel(yexpvar_lable[u"N1k"],fontsize=16)
+    plt.ylabel(yexpvar_lable[u"N2k"],fontsize=16)
     plt.show()
+
+    #мощность по ПВД
+
+    def calc_N2kpvd_man(*data):
+        u"""Определяем мощность блока по сумме 2-х мощностей ПВД
+        0'Tgor1',1'Tgor2',2'Tgor3',3'Tgor4',4'Thol1',5'Thol2',6'Thol3',7'Thol4',8'dPgcn1',9'dPgcn2',10'dPgcn3',11'dPgcn4',
+        12'Pzone1',13'Pzone2','14Ntep','15Naz','16Nrr','17N1k','18N2k','19Naknp','20Nturb','21Tpv1','22Tpv2','23Tpv3','24Tpv4',
+        '25Gpv1','26Gpv2','27Gpv3','28Gpv4',
+        '29Ppg1','30Ppg2','31Ppg3','32Ppg4','33Pgpk','34tpvd1','35tpvd2',
+        '36ppvd1','37ppvd2','38gpvd1','39gpvd2','40ppv1','41ppv2','42ppv3','43ppv4','44gkgtn'
+        """
+        Npvd1=Npvd(data[36]/10.197,data[34],data[38],
+                    data[29]/10.197,data[30]/10.197,data[31]/10.197,data[32]/10.197,
+                    data[25],data[26],data[27],data[28])
+        Npvd2=Npvd(data[37]/10.197,data[35],data[39],
+                    data[29]/10.197,data[30]/10.197,data[31]/10.197,data[32]/10.197,
+                    data[25],data[26],data[27],data[28])
+        N2kpvd=Npvd1+Npvd2
+        return N2kpvd
+
+    npvd_npp=N2kpvd(**store['alldata'].iloc[range(0,1710,10)])
+    npvd_npp.name=u'Npvd npp-data-calc'
+    npvd_npp.plot(legend=True,style='-+')
+
+    npvd_sol=pd.DataFrame(calc_N2kpvd_man(*ysolnpm.T),store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Npvd-solve'])
+    npvd_sol[u'Npvd-solve'].plot(legend=True,style='-+')
+    plt.show()
+
+
+    #мощности 1к и 2к с погрешностью
+    yexp_te.plot(legend=True) #n1k
+    plt.errorbar(yexp_te.iloc[range(0,171,20)].index,yexp_te.iloc[range(0,171,20)].values,210,marker='o',ls='none',color='blue') #реальная погрешность 211мвт, а не 80
+
+    n2k_npp.name=u'N2k npp-calc'
+    n2k_npp.plot(legend=True,color='red')
+    plt.errorbar(n2k_npp.iloc[range(14,171,20)].index,n2k_npp.iloc[range(14,171,20)].values,51,marker='o',ls='none',color='red') #
+
+    n2k_sol[u'N2k-solve'].plot(legend=True,style='-+') #добавляем график решения
+    #plt.xticks(rotation=45)
+
+    npvd_npp.plot(legend=True,style='-',color='cyan')
+    plt.errorbar(npvd_npp.iloc[range(7,171,20)].index,npvd_npp.iloc[range(7,171,20)].values,270,marker='o',ls='none',color='cyan')
+
+    Nall_npp=0.3*yexp_te +0.5*n2k_npp +0.2*npvd_npp
+    Nall_npp.name=u'Nall 03 05 02'
+    Nall_npp.plot(color='yellow')
+
+    plt.show()
+
+    #разница между нашим расчетом по 1к и по 2к
+    (yexp_te-n2k_npp).plot(style='--+')
+    plt.show()
+
+    #разница между 1к и 2к базы
+    (store['alldata'].iloc[range(0,1710,1)]['N1k']-store['alldata'].iloc[range(0,1710,1)]['Npg']).plot(style='-+')
+    plt.show()
+
     (ysol_df.icol(0)-yexp_te).plot()
     plt.hist(ysol_df.icol(0)-yexp_te,bins=20)
     plt.xlabel(ur'$\Delta$'+yexpvar_lable[u"N1k"],fontsize=16)
@@ -1253,8 +1437,80 @@ def oform_diss_exp_data():
     plt.xlabel(u"Время в архиве",fontsize=16)
     plt.show()
 
+def try_solution(stest):
+    u""" проверяем решение
+    stest - решение в нормальных параметрах, а не отклонениях
+
+    """
+    def coef_input(inmas):
+        global mod_coef
+        if len(inmas)!=len(mod_coef[:-5]):
+            error_msg = 'Wrong input massive'
+            raise ValueError, error_msg
+        for i in range(len(mod_coef[:-5])):
+            v[mod_coef[i]]=inmas[i]
 
 
+    coef_input(stest[:-6])#ставим коэффициенты
+    set_m_st(stest[[-6,-4,-3,-2,-5]]) # ставим параметры модели из сетки
+
+def check_Ndet_in_model():
+    u"""
+    проверяем расчет мощности в модели
+    """
+    model_par=out_param()
+
+    Rohol = vec_steam_pTrho(model_par['Pzone1']*10**6/10.197,model_par['Thol1']+273.15)
+    Gpm3=Gcnf(3,1,model_par['dPgcn1']/10.197,50.,Rohol) #м3/ch
+    Gp = Gpm3*Rohol/3600 #расход через петлю, кг/с
+    def N1kp_mod(Pgor,Tgor,Phol,Thol,Gkgs,Ngcn=5.05*10**6):
+        u"""Определяем мощность петли по параметрам 1-го контура
+        Pgor - давление гор.петли, МВт (реально давление в реакторе)
+        Tgor - температура гор.нитки, Град С.
+        Phol - давление хол.петли, МВт (реально опять давление в реакторе)
+        Thol - температура хол.нитки, Град С.
+        #dPgcn - перепад на ГЦН, МПа
+        #Fgcn - частота питания ГЦН, Гц
+        Gkgs - расход через петлю, кг/с
+        #Gktch - расход через петлю, кт/ч
+        #Gpm3 - расход через петлю, м3/ч
+        Ngcn - Мощность электродвигателя ГЦН, Вт (нужна ли?)
+        """
+        #Rohol = steam_pT(Phol*10**6,Thol+273.15).rho #плотность холодной нитки, кг/м3 (проверить размерность)
+        Rohol = vec_steam_pTrho(Phol*10**6,Thol+273.15)
+        Gp = Gkgs #расход через петлю, кг/с
+        #Gp = Gktch*10**6/3600 #расход через петлю, кг/с
+        #Gpm3=Gcnf(3,1,dPgcn,Fgcn,Rohol) #м3/ch
+        #Gp = Gpm3*Rohol/3600 #расход через петлю, кг/с
+        #Hgor = steam_pT(Pgor*10**6,Tgor+273.15).h #Энтальпия горячей нитки петли, Дж/кг, внутри стим требует давление в Па, температуру в Кельвинах
+        Hgor = vec_steam_pT(Pgor*10**6,Tgor+273.15)
+        #Hhol = steam_pT(Phol*10**6,Thol+273.15).h #Энтальпия холодной нитки петли, Дж/кг
+        Hhol = vec_steam_pT(Phol*10**6,Thol+273.15)
+        N1kp=Gp*(Hgor-Hhol)-Ngcn #Мощность петли, Вт=Дж/с
+        return N1kp/10**6 #возвращаем мощность в МВт
+    def N1k_mod(**args):
+        u"""Определяем мощность по параметрам 1-го контура
+        сумма по 4 петлям
+        """
+        N1kp1=N1kp_mod(args['Pzone1']/10.197,args['Tgor1'],args['Pzone1']/10.197,args['Thol1'],args['Gp1kgs'],0.)
+        N1kp2=N1kp_mod(args['Pzone1']/10.197,args['Tgor2'],args['Pzone1']/10.197,args['Thol2'],args['Gp2kgs'],0.)
+        N1kp3=N1kp_mod(args['Pzone1']/10.197,args['Tgor3'],args['Pzone1']/10.197,args['Thol3'],args['Gp3kgs'],0.)
+        N1kp4=N1kp_mod(args['Pzone1']/10.197,args['Tgor4'],args['Pzone1']/10.197,args['Thol4'],args['Gp4kgs'],0.)
+        N1k=N1kp1+N1kp2+N1kp3+N1kp4
+        fun = N1k
+        return fun
+    print N1k_mod(**model_par),", MWt"
+
+    def N2k_mod(**args):
+        u""" Мощность второго контура как сумма мощностей ПГ
+        """
+        Npg1=Npg(args['ppv1']/10.197,args['Tpv1'],args['Gpv1'],args['Ppg1']/10.197,args['Gpv1'],0.)
+        Npg2=Npg(args['ppv2']/10.197,args['Tpv2'],args['Gpv2'],args['Ppg2']/10.197,args['Gpv2'],0.)
+        Npg3=Npg(args['ppv3']/10.197,args['Tpv3'],args['Gpv3'],args['Ppg3']/10.197,args['Gpv3'],0.)
+        Npg4=Npg(args['ppv4']/10.197,args['Tpv4'],args['Gpv4'],args['Ppg4']/10.197,args['Gpv4'],0.)
+        N2k=Npg1+Npg2+Npg3+Npg4
+        return N2k
+    print N2k_mod(**model_par),", MWt"
 
 def main():
     pass

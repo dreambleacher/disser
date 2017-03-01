@@ -1,14 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import numpy as np
 from knpp_b3_hdf5_model import *
 from sklearn import linear_model
 from sklearn.preprocessing import PolynomialFeatures
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from mpl_toolkits.mplot3d import Axes3D
-#from def_vars import *
+from matplotlib import rc
+from def_vars import *
 import os
+
+put_data_fileh5_model(100) #для тестов
 
 rc('font', **{'family': 'verdana', 'size'   : 12})
 rc('text.latex', unicode=True)
@@ -17,57 +21,6 @@ rc('text.latex', preamble='\usepackage[russian]{babel}')
 
 locale.setlocale(locale.LC_ALL,'rus')
 
-mod_coef=[
-u'FLaSG1_CfResL',
-u'FLaSG2_CfResL',
-u'FLaSG3_CfResL',
-u'FLaSG4_CfResL',
-u'YD11D01_2_Hnom',
-u'YD12D01_2_Hnom',
-u'YD13D01_2_Hnom',
-u'YD14D01_2_Hnom',
-#u'YHSIEVE_TUN(1)',
-u'Loop_CfResL1',
-u'Loop_CfResL2',
-u'Loop_CfResL3',
-u'Loop_CfResL4',
-u'SG_CfResL1',
-u'SG_CfResL2',
-u'SG_CfResL3',
-u'SG_CfResL4',
-u'YhqCor1_eqf',
-u'YhqCor2_eqf',
-u'YhqCor3_eqf',
-u'Nin', u'Pazin', u'Pgpkin',u'Tpvdain', u'Tpvdbin'
-]
-
-mod_coef_lable={
-u'FLaSG1_CfResL':ur'$\xi_{пг1}$',
-u'FLaSG2_CfResL':ur'$\xi_{пг2}$',
-u'FLaSG3_CfResL':ur'$\xi_{пг3}$',
-u'FLaSG4_CfResL':ur'$\xi_{пг4}$',
-u'YD11D01_2_Hnom':ur'$k_{Gгцн1}$',
-u'YD12D01_2_Hnom':ur'$k_{Gгцн2}$',
-u'YD13D01_2_Hnom':ur'$k_{Gгцн3}$',
-u'YD14D01_2_Hnom':ur'$k_{Gгцн4}$',
-#u'YHSIEVE_TUN(1)',
-u'Loop_CfResL1':ur'$\xi_{гцк1}$',
-u'Loop_CfResL2':ur'$\xi_{гцк2}$',
-u'Loop_CfResL3':ur'$\xi_{гцк3}$',
-u'Loop_CfResL4':ur'$\xi_{гцк4}$',
-u'SG_CfResL1':ur'$\xi_{тр.пг1}$',
-u'SG_CfResL2':ur'$\xi_{тр.пг2}$',
-u'SG_CfResL3':ur'$\xi_{тр.пг3}$',
-u'SG_CfResL4':ur'$\xi_{тр.пг4}$',
-u'YhqCor1_eqf':ur'$k_{смеш1}$',
-u'YhqCor2_eqf':ur'$k_{смеш2}$',
-u'YhqCor3_eqf':ur'$k_{смеш3}$',
-u'Nin':ur'$N_{АЗ}$',
-u'Pazin':ur'$P_{АЗ}$',
-u'Pgpkin':ur'$P_{гпк}$',
-u'Tpvdain':ur'$t_{пвд1}$',
-u'Tpvdbin':ur'$t_{пвд2}$'
-}
 
 mod_coef_delt=[
 0.1,0.1,0.1,0.1,
@@ -76,83 +29,6 @@ mod_coef_delt=[
 0.1,0.1,0.1,0.1,
 0.1,0.1,0.1]
 
-yexpvar=[
-'Tgor1',
-'Tgor2',
-'Tgor3',
-'Tgor4',
-'Thol1',
-'Thol2',
-'Thol3',
-'Thol4',
-'dPgcn1',
-'dPgcn2',
-'dPgcn3',
-'dPgcn4',
-'Pzone1',
-'Pzone2',
-'Ntep','Naz','Nrr','N1k','N2k','Naknp','Nturb',
-'Tpv1',
-'Tpv2',
-'Tpv3',
-'Tpv4',
-'Gpv1',
-'Gpv2',
-'Gpv3',
-'Gpv4',
-'Ppg1',
-'Ppg2',
-'Ppg3',
-'Ppg4',
-'Pgpk',
-'tpvd1','tpvd2',
-'ppvd1','ppvd2',
-'gpvd1','gpvd2',
-'ppv1','ppv2','ppv3','ppv4',
-'gkgtn'
-]
-
-yexpvar_lable={
-'Tgor1':ur'$t_{гор1},\ ^\circ C$',
-'Tgor2':ur'$t_{гор2},\ ^\circ C$',
-'Tgor3':ur'$t_{гор3},\ ^\circ C$',
-'Tgor4':ur'$t_{гор4},\ ^\circ C$',
-'Thol1':ur'$t_{хол1},\ ^\circ C$',
-'Thol2':ur'$t_{хол2},\ ^\circ C$',
-'Thol3':ur'$t_{хол3},\ ^\circ C$',
-'Thol4':ur'$t_{хол4},\ ^\circ C$',
-'dPgcn1':ur'$dP_{гцн1},\ МПа$',
-'dPgcn2':ur'$dP_{гцн2},\ МПа$',
-'dPgcn3':ur'$dP_{гцн3},\ МПа$',
-'dPgcn4':ur'$dP_{гцн4},\ МПа$',
-'Pzone1':ur'$P_{АЗ},\ МПа$',
-'Pzone2':ur'$dP_{АЗ},\ МПа$',
-'Ntep':'$Ntep$','Naz':'$Naz$','Nrr':'$Nrr$','N1k':'$N1k$','N2k':'$N2k$','Naknp':'$Naknp$','Nturb':'$Nturb$',
-'Tpv1':ur'$t_{пв1},\ ^\circ C$',
-'Tpv2':ur'$t_{пв2},\ ^\circ C$',
-'Tpv3':ur'$t_{пв3},\ ^\circ C$',
-'Tpv4':ur'$t_{пв4},\ ^\circ C$',
-'Gpv1':ur'$G_{пв1},\ \frac{кг}{м^3}$',
-'Gpv2':ur'$G_{пв2},\ \frac{кг}{м^3}$',
-'Gpv3':ur'$G_{пв3},\ \frac{кг}{м^3}$',
-'Gpv4':ur'$G_{пв4},\ \frac{кг}{м^3}$',
-'Ppg1':ur'$P_{пг1},\ МПа$',
-'Ppg2':ur'$P_{пг2},\ МПа$',
-'Ppg3':ur'$P_{пг3},\ МПа$',
-'Ppg4':ur'$P_{пг4},\ МПа$',
-'Pgpk':ur'$P_{гпк},\ МПа$',
-'tpvd1':ur'$t_{пвд1},\ ^\circ C$',
-'tpvd2':ur'$t_{пвд2},\ ^\circ C$',
-'ppvd1':ur'$P_{пвд1},\ МПа$',
-'ppvd2':ur'$P_{пвд2},\ МПа$',
-'gpvd1':ur'$G_{пвд1},\ \frac{кг}{м^3}$',
-'gpvd2':ur'$G_{пвд2},\ \frac{кг}{м^3}$',
-'ppv1':ur'$P_{пв1},\ МПа$',
-'ppv2':ur'$P_{пв2},\ МПа$',
-'ppv3':ur'$P_{пв3},\ МПа$',
-'ppv4':ur'$P_{пв4},\ МПа$',
-'gkgtn':ur'$G_{кгтн},\ \frac{кг}{м^3}$'
-}
 
 
 coef_bound=np.array([
@@ -184,56 +60,10 @@ coef_bound=np.array([
 ])
 
 
-deriv_test ={ #погрешности нормировки !только чтобы отсечь лишнее
-u'Gpv1':1,
-u'Gpv2':1,
-u'Gpv3':1,
-u'Gpv4':1,
-u'N1k':0.01,
-u'N2k':0.01,
-u'Naknp':0.01,
-u'Naz':0.01,
-u'Nrr':0.01,
-u'Ntep':0.01,
-u'Nturb':0.01,
-u'Pgpk':0.1,
-u'Ppg1':0.1,
-u'Ppg2':0.1,
-u'Ppg3':0.1,
-u'Ppg4':0.1,
-u'Pzone1':0.1,
-u'Pzone2':0.1,
-u'Tgor1':0.1,
-u'Tgor2':0.1,
-u'Tgor3':0.1,
-u'Tgor4':0.1,
-u'Thol1':0.1,
-u'Thol2':0.1,
-u'Thol3':0.1,
-u'Thol4':0.1,
-u'Tpv1':0.1,
-u'Tpv2':0.1,
-u'Tpv3':0.1,
-u'Tpv4':0.1,
-u'dPgcn1':0.1,
-u'dPgcn2':0.1,
-u'dPgcn3':0.1,
-u'dPgcn4':0.1,
-u'gkgtn':1,
-u'gpvd1':1,
-u'gpvd2':1,
-u'ppv1':0.1,
-u'ppv2':0.1,
-u'ppv3':0.1,
-u'ppv4':0.1,
-u'ppvd1':0.1,
-u'ppvd2':0.1,
-u'tpvd1':0.1,
-u'tpvd2':0.1}
-
-
 if os.environ['COMPUTERNAME']=='MOLEV':
     dirofdis='D:/git_py/' #work
+elif os.environ['COMPUTERNAME']=='ORTHOMISSION':
+    dirofdis='C:/_git_py/disser/' #nout new
 else:
     dirofdis='G:/git_disser/disser/' #home
 
@@ -241,15 +71,12 @@ else:
 storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0_by1.h5')
 '''
 '''new *10 points'''
-storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0_10points.h5')
+#storeofd = pd.HDFStore(dirofdis+'liner_JAC_model_x0100.0, 60.9, 215.0, 215.0, 160.0_10points.h5')
 
-#dataindf=pd.DataFrame({'Nin':storeofd['Nin'],'pgpkin':storeofd['pgpkin'],'tpvd1in':storeofd['tpvd1in'],'tpvd2in':storeofd['tpvd2in'],'pazin':storeofd['pazin']})
-#storeofd['Nin']=pd.Series(optim_npmas.transpose()[1])
-#storeofd['pgpkin']=pd.Series(optim_npmas.transpose()[2])
-#storeofd['tpvd1in']=pd.Series(optim_npmas.transpose()[3])
-#storeofd['tpvd2in']=pd.Series(optim_npmas.transpose()[4])
-#storeofd['pazin']=pd.Series(optim_npmas.transpose()[5])
-#storeofd['pmodelout']=pd.Series(optim_npmas.transpose()[6])
+'''new store dir'''
+storedir='C:/_git_py/calc_nout_new/'
+storeofd = pd.HDFStore(storedir+'liner_JAC_model_x0_by1.h5')
+
 out_data=storeofd['model_data']
 inp_data=storeofd['inp_data']
 storeofd.close()
@@ -259,26 +86,6 @@ y0=out_data.iloc[0]
 y0m=np.array([out_data.iloc[0][x] for x in yexpvar])
 x0=inp_data.iloc[0]
 x0m=np.array([inp_data.iloc[0][x] for x in mod_coef])
-
-##qq=inp_data[
-##(inp_data['FLaSG2_CfResL']==0.1)&
-##(inp_data['FLaSG3_CfResL']==0.1)&
-##(inp_data['FLaSG4_CfResL']==0.1)&
-##(inp_data['YD11D01_2_Hnom']==0.1)
-##]['FLaSG1_CfResL']
-##
-##
-##qq=inp_data[inp_data['FLaSG2_CfResL']==0.1]
-##
-##qq=qq[inp_data['FLaSG3_CfResL']==0.1]
-##
-##qq=inp_data
-##for k in qq.keys()[1:]:
-##    print k,"\n",qq
-##    qq=qq[qq[k]==qq[qq[k].duplicated()][k].values[0]]
-##qq.index
-##
-##plt.plot(qq['FLaSG1_CfResL'],out_data.ix[qq.index]['Tgor1'],'o-',label='Tgor1');plt.show()
 
 
 
@@ -387,7 +194,7 @@ def JAC_from_arch(vkey,pr_opt=False):
         if pr_opt:print kk, der[kk], derfit[kk], x0fit[kk]
 
         u"""секция вывода на графики
-        #fig = plt.figure()
+        fig = plt.figure()
         plt.plot(xfit,yfplt,'g-')
         plt.plot(qq[vkey],out_data.ix[qq.index][kk],'o')
         #plt.plot(qqn[vkey],out_data.ix[qqn.index][kk], 'r+',yerr=3.0)
@@ -398,8 +205,9 @@ def JAC_from_arch(vkey,pr_opt=False):
         if abs(plt.ylim()[1]-plt.ylim()[0])<arch_var_deviation[kk]:
             print kk,'\tout of limits'
             plt.ylim((out_data.ix[qqn.index][kk].mean()-arch_var_deviation[kk],out_data.ix[qqn.index][kk].mean()+arch_var_deviation[kk]))
-        plt.show()
-        #fig.savefig(dirofdis+'plt2/'+kk+'_'+vkey+'.png')
+        #plt.show()
+        fig.savefig(dirofdis+'pltn1/'+kk+'_'+vkey+'.png')
+        plt.close(fig)
         #"""
         if pr_opt: print
         if pr_opt: print
@@ -426,6 +234,9 @@ def jac_2_matrix(jac,pr_opt=False):
     return mas  # mas - матрица якобиана в виде np.array, строки, столбцы -yexpvar,mod_coef
 
 jac,x0masfit=all_JAC()
+##jac[u'Nin']['Pzone1']=0 #убираем ошибку якоб
+##for j in jac[u'rot_coef']:
+##    jac[u'rot_coef'][j]=0 #неправильно считаем закрутку, пока зануляем
 mas=jac_2_matrix(jac)
 masx0=jac_2_matrix(x0masfit)
 
@@ -530,6 +341,13 @@ def test():
     jacdf.to_html(dirofdis+'jac.html',float_format=lambda x: '%10.2f' % x)#,float_format='%5.2f'
 
 
+class JAC:
+    u"""Класс для рачета якобиана и действий с ним
+    """
+    def __init__(self):
+        self.jac,self.x0masfit=all_JAC() #якобиан в виде словарей как производная функции (множитель), x0 как константа функции
+        self.mas=jac_2_matrix(jac)
+        self.masx0=jac_2_matrix(x0masfit)
 
 
 def funk_fr_jac(dx):
@@ -619,12 +437,14 @@ def boundX(x,fullprint=True):
 def y_fr_model():
     u"""
     Берем экспериментальные данные из архива станции
+    Все размерности из модели не в СИ, кроме Pпит воды (оно в СИ:(((( )
     """
     ppgpravk=0
     arch_var=dict(Tgor1=v.OG_T_gor[0],Tgor2=v.OG_T_gor[1],Tgor3=v.OG_T_gor[2],Tgor4=v.OG_T_gor[3],
         Thol1=v.OG_T_hol[0],Thol2=v.OG_T_hol[1],Thol3=v.OG_T_hol[2],Thol4=v.OG_T_hol[3],
         dPgcn1=v.OG_pp_gcn[0],dPgcn2=v.OG_pp_gcn[1],dPgcn3=v.OG_pp_gcn[2],dPgcn4=v.OG_pp_gcn[3],
         Pzone1=v.OG_p_rea,Pzone2=0.,
+        Gp1kgs=v.OG_Gp_kgs[0],Gp2kgs=v.OG_Gp_kgs[1],Gp3kgs=v.OG_Gp_kgs[2],Gp4kgs=v.OG_Gp_kgs[3],
         Ntep=0.,Naz=0.,Nrr=0.,N1k=v.OG_N_1k,N2k=v.OG_N_pg_calc,Naknp=v.OG_N_aknp,Nturb=v.OG_N_gen,
         Tpv1=v.OG_t_pitv[0],Tpv2=v.OG_t_pitv[1],Tpv3=v.OG_t_pitv[2],Tpv4=v.OG_t_pitv[3],
         Gpv1=v.OG_g_pitv[0],Gpv2=v.OG_g_pitv[1],Gpv3=v.OG_g_pitv[2],Gpv4=v.OG_g_pitv[3],
@@ -636,9 +456,9 @@ def y_fr_model():
         ppv1=v.OG_p_pitvg[0],ppv2=v.OG_p_pitvg[1],ppv3=v.OG_p_pitvg[2],ppv4=v.OG_p_pitvg[3],
         gkgtn=0.)
     yexp1=np.array([arch_var[x] for x in yexpvar])
-    return yexp1
+    return yexp1,arch_var
 
-y_from_model_mas=y_fr_model() # для ускорения считаем только 1 раз
+y_from_model_mas,y_from_model_dict=y_fr_model() # для ускорения считаем только 1 раз
 
 def Ppg_popravka(ppgpravk):
     u"""
@@ -718,46 +538,46 @@ def restrict_JAC(JT):
     for par in mod_coef:
         normcoef[par]=mod_coef_delta[par][1]-mod_coef_delta[par][0]
     normcoef_mas=np.array([normcoef[p] for p in mod_coef])
-    Jypsev1=np.zeros(24) #FLaSG1_CfResL-FLaSG2_CfResL
+    Jypsev1=np.zeros(len(mod_coef)) #FLaSG1_CfResL-FLaSG2_CfResL
     Jypsev1[0]=1./(0.2*normcoef_mas[0]) #dypsev/dx1
     Jypsev1[1]=-1./(0.2*normcoef_mas[0])
 
-    Jypsev2=np.zeros(24) #FLaSG1_CfResL-FLaSG3_CfResL
+    Jypsev2=np.zeros(len(mod_coef)) #FLaSG1_CfResL-FLaSG3_CfResL
     Jypsev2[0]=1./(0.2*normcoef_mas[0]) #dypsev/dx1
     Jypsev2[2]=-1./(0.2*normcoef_mas[0])
     Jypsev=np.concatenate(([Jypsev1],[Jypsev2]))
 
-    Jypsev3=np.zeros(24) #FLaSG1_CfResL-FLaSG4_CfResL
+    Jypsev3=np.zeros(len(mod_coef)) #FLaSG1_CfResL-FLaSG4_CfResL
     Jypsev3[0]=1./(0.2*normcoef_mas[0]) #dypsev/dx1
     Jypsev3[3]=-1./(0.2*normcoef_mas[0])
     Jypsev=np.concatenate((Jypsev,[Jypsev3]))
 
-    Jypsev4=np.zeros(24) #Loop_CfResL1-Loop_CfResL2
+    Jypsev4=np.zeros(len(mod_coef)) #Loop_CfResL1-Loop_CfResL2
     Jypsev4[8]=1./(0.2*normcoef_mas[8]) #dypsev/dx1
     Jypsev4[9]=-1./(0.2*normcoef_mas[8])
     Jypsev=np.concatenate((Jypsev,[Jypsev4]))
 
-    Jypsev5=np.zeros(24) #Loop_CfResL1-Loop_CfResL3
+    Jypsev5=np.zeros(len(mod_coef)) #Loop_CfResL1-Loop_CfResL3
     Jypsev5[8]=1./(0.2*normcoef_mas[8]) #dypsev/dx1
     Jypsev5[10]=-1./(0.2*normcoef_mas[8])
     Jypsev=np.concatenate((Jypsev,[Jypsev5]))
 
-    Jypsev6=np.zeros(24) #Loop_CfResL1-Loop_CfResL4
+    Jypsev6=np.zeros(len(mod_coef)) #Loop_CfResL1-Loop_CfResL4
     Jypsev6[8]=1./(0.2*normcoef_mas[8]) #dypsev/dx1
     Jypsev6[11]=-1./(0.2*normcoef_mas[8])
     Jypsev=np.concatenate((Jypsev,[Jypsev6]))
 
-    Jypsev7=np.zeros(24) #SG_CfResL1-SG_CfResL2
+    Jypsev7=np.zeros(len(mod_coef)) #SG_CfResL1-SG_CfResL2
     Jypsev7[12]=1./(0.2*normcoef_mas[12]) #dypsev/dx1
     Jypsev7[13]=-1./(0.2*normcoef_mas[12])
     Jypsev=np.concatenate((Jypsev,[Jypsev7]))
 
-    Jypsev8=np.zeros(24) #SG_CfResL1-SG_CfResL2
+    Jypsev8=np.zeros(len(mod_coef)) #SG_CfResL1-SG_CfResL2
     Jypsev8[12]=1./(0.2*normcoef_mas[12]) #dypsev/dx1
     Jypsev8[14]=-1./(0.2*normcoef_mas[12])
     Jypsev=np.concatenate((Jypsev,[Jypsev8]))
 
-    Jypsev9=np.zeros(24) #SG_CfResL1-SG_CfResL2
+    Jypsev9=np.zeros(len(mod_coef)) #SG_CfResL1-SG_CfResL2
     Jypsev9[12]=1./(0.2*normcoef_mas[12]) #dypsev/dx1
     Jypsev9[15]=-1./(0.2*normcoef_mas[12])
     Jypsev=np.concatenate((Jypsev,[Jypsev9]))
@@ -766,7 +586,7 @@ def restrict_JAC(JT):
     JTrestr=(Jn.T).copy()
 
     #add PG poprav:
-    pgadd=np.zeros(54)
+    pgadd=np.zeros(JTrestr.shape[1])
     pgadd[29]=1.
     pgadd[30]=1.
     pgadd[31]=1.
@@ -805,10 +625,12 @@ def restrict_yexperr(yexperr,JTrestr):
     yexperr_restr=(np.append(yexperr,yexperradd*2)).copy()
     return yexperr_restr
 
-def search_sum(delta):
+def search_sum(delta,JT,yexp1,y0m,yexperr):
     u"""
     возвращаем сумму квадратов по дельте
     """
+    #print yexp1.shape
+    #print delta.shape
     return (((-yexp1+y0m)/yexperr+np.dot(JT.T,delta))**2).sum() #
 
 def func_by_delt(delta,JTnenorm,y0m):
@@ -858,7 +680,7 @@ def otchet_func(delta):
     print "_________"
     print "_________"
 
-def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
+def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False,precise_calc=False):
     u"""ищем решение методом ньютона гауса
     JTnorm - нормированная(!!!) транспонированная матрица Якоби
     yexp1 - экспериментальный срез
@@ -899,19 +721,19 @@ def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
     dsal=np.dot((np.linalg.inv(np.dot(JTnorm,JTnorm.T))) , np.dot(JTnorm,(yexp1-y0m)/yexperr)) #to4noe reshenie
     if fullprint: otchet_func(dsal)
 
-    def tfunc(delta,JTnorm,yexp1,y0m):
-        #print delta
-        summ.append(search_sum(delta[0:-1])+delta[-1]*delta[-1])
+    def tfunc(delta,JTnorm,yexp1,y0m,yexperr):
+        #summ.append(search_sum(delta[0:-1],JTnorm)+delta[-1]*delta[-1])
+        summ.append(search_sum(delta,JTnorm,yexp1,y0m,yexperr))
         return ((-yexp1+y0m)/yexperr+np.dot(JTnorm.T,delta))
     def tfunc_jac(delta,JTnorm):
         return JTnorm.T
-    xprib0=np.zeros(25) #начальное приближение решения
+    xprib0=np.zeros(23) #начальное приближение решения
     xprib0.fill(0.1)
-    xprib0[20]=-0.1
+    xprib0[-5]=-0.1
 
     b1=(np.append(mod_coef_delta_m.T[0]-x0m,-np.inf),np.append(mod_coef_delta_m.T[1]-x0m,np.inf))
     summ=[]
-    dsalscp=scipy.optimize.least_squares(tfunc,xprib0,bounds=b1, args=(JTnorm,yexp1,y0m))#jac=tfunc_jac,max_nfev =1000,diff_step=0.1
+    dsalscp=scipy.optimize.least_squares(tfunc,xprib0,bounds=b1, args=(JTnorm,yexp1,y0m,yexperr))#jac=tfunc_jac,max_nfev =1000,diff_step=0.1
     if fullprint: plt.plot(summ)
     if fullprint: plt.xlabel(u'Шаг решения')
     if fullprint: plt.ylabel(u'Сумма квадратов нормы вектор-функции')
@@ -919,9 +741,9 @@ def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
     if fullprint: plt.show()
 
     if fullprint: otchet_func(dsalscp['x'])
-    memory1=dsalscp['x']
-    memory2=dsalscp['x']
-    memory3=dsalscp['x']
+    #memory1=dsalscp['x']
+    #memory2=dsalscp['x']
+    #memory3=dsalscp['x']
 
     '''dds=np.dot((np.dot(np.linalg.inv(np.dot(mas,mas.T)),mas)),(yexp1-y0m)/yexperr)
 
@@ -942,8 +764,342 @@ def newton_gauss(JTnorm,yexp1,y0m,yexperr,fullprint=False):
         dds0=dds1
         print dds1'''
 
-    #return dsalscp['x'] #решение методом наименьших квадратов
-    return dsal #точное решение
+    if precise_calc:
+        return dsal #точное решение
+    else:
+        return dsalscp['x'] #решение методом наименьших квадратов
+
+class SolveJac:
+    u"""Класс считающий решение якобиана"""
+    def __init__(self,jac,yexp,arch_var_deviation=arch_var_deviation,x0m=x0m,y0m=y0m,yexpvar=yexpvar,mod_coef=mod_coef,mod_coef_delta_m=mod_coef_delta_m):
+        u"""
+        jac - обычный якобиан в словаре
+
+        """
+        self.jac=jac
+        self.arch_var_deviation=arch_var_deviation
+        self.x0m=x0m
+        self.y0m=y0m #начальное значение
+        self.yexpvar=yexpvar
+        self.mod_coef=mod_coef
+        self.mod_coef_delta_m=mod_coef_delta_m
+        self.yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
+        self.jac_mas=jac_2_matrix(jac) #jac в нпмассиве
+        self.yexp=yexp #берем значения из модели #переделать на точку из базы! №значения архива станции
+        self.yexp_df=pd.DataFrame(np.array([self.yexp]),columns=yexpvar)
+        self.JT_restr=restrict_JAC(self.jac_mas)
+        self.jac_df=pd.DataFrame(jac)
+        self.jac_df_norm=(self.jac_df.T/pd.Series(arch_var_deviation)).T #нормированный якобиан
+        self.jac_mas_norm=jac_2_matrix(self.jac_df_norm) #нормированный якобиан в матрице
+        self.jac_mas_norm_restr=restrict_JAC(self.jac_mas_norm) #нормированный якобиан c ограничением в матрице
+        self.yexp_restr=restrict_yexp(self.yexp,self.jac_mas_norm_restr) #добавляем нули в массив значений архива для соответсвия размерности
+        self.y0_restr=restrict_y0(y0m,self.jac_mas_norm_restr) #добавляем нули для размерности начального значения функции
+        self.yexperr_restr=restrict_yexperr(self.yexperr,self.jac_mas_norm_restr) #добавляем 1 для размерности ошибки
+
+    def matrix_solve(self,fullprint=False):
+        u"""
+        находим точное решение задачи (не учитываются краевые условия)
+        """
+        JTJ=np.dot(self.jac_mas_norm_restr,self.jac_mas_norm_restr.T)
+        JTJ1=np.linalg.inv(JTJ)
+        dsal=np.dot(
+                    (np.linalg.inv(np.dot(self.jac_mas_norm_restr,self.jac_mas_norm_restr.T))) ,
+                     np.dot(self.jac_mas_norm_restr,(self.yexp_restr-self.y0_restr)/self.yexperr_restr)) #to4noe reshenie
+        if fullprint: otchet_func(dsal)
+        self.ysol=func_by_delt(dsal,self.JT_restr,self.y0_restr)#почему ненорм?!?!??
+        self.ysol_temp=func_by_delt(dsal,self.jac_mas_norm_restr,self.y0_restr)
+        self.deltasol=dsal
+        self.xsol=np.append(self.x0m,0.)+dsal
+        xcol=list(self.mod_coef)
+        xcol.append(u'pgpopr')
+        self.xsol_df=pd.DataFrame(np.array([self.xsol]),columns=xcol)
+        ycol=list(self.yexpvar)
+        ycol.extend(['FSGrestr1','FSGrestr2','FSGrestr3',
+                     'Looprestr1','Looprestr2','Looprestr2',
+                     'SGrestr1','SGrestr2','SGrestr3'])
+        self.ysol_df=pd.DataFrame(np.array([self.ysol]),columns=ycol)
+        self.ysol_delta_df=pd.DataFrame(np.array([self.ysol-self.yexp_restr]),columns=ycol)
+        self.yexp_restr_df=pd.DataFrame(np.array([self.yexp_restr]),columns=ycol)
+        return dsal #точное решение
+
+    def math_solve(self,fullprint=False):
+        u"""
+        находим численное решение задачи
+        """
+        def tfunc(delta,JTnorm,yexp1,y0m,yexperr):
+            self.solve_summ.append(search_sum(delta,JTnorm,yexp1,y0m,yexperr))
+            return ((-yexp1+y0m)/yexperr+np.dot(JTnorm.T,delta))
+        def tfunc_jac(delta,JTnorm):
+            return JTnorm.T
+        xprib0=np.zeros(23) #начальное приближение решения
+        xprib0.fill(0.1)
+        xprib0[-5]=-0.1
+
+        self.bounds=(np.append(mod_coef_delta_m.T[0]-self.x0m,-np.inf),np.append(mod_coef_delta_m.T[1]-self.x0m,np.inf))
+        self.solve_summ=[]
+        dsalscp=scipy.optimize.least_squares(tfunc,xprib0,bounds=self.bounds, args=(self.jac_mas_norm_restr,self.yexp_restr,self.y0_restr,self.yexperr_restr))#jac=tfunc_jac,max_nfev =1000,diff_step=0.1
+        self.deltasol=dsalscp['x']
+        self.ysol=func_by_delt(self.deltasol,self.JT_restr,self.y0_restr)#почему ненорм?!?!??
+        self.ysol_temp=func_by_delt(self.deltasol,self.jac_mas_norm_restr,self.y0_restr)
+        self.xsol=np.append(self.x0m,0.)+self.deltasol
+        xcol=list(self.mod_coef)
+        xcol.append(u'pgpopr')
+        self.xsol_df=pd.DataFrame(np.array([self.xsol]),columns=xcol)
+        ycol=list(self.yexpvar)
+        ycol.extend(['FSGrestr1','FSGrestr2','FSGrestr3',
+                     'Looprestr1','Looprestr2','Looprestr2',
+                     'SGrestr1','SGrestr2','SGrestr3'])
+        self.ysol_df=pd.DataFrame(np.array([self.ysol]),columns=ycol)
+        self.ysol_delta_df=pd.DataFrame(np.array([self.ysol-self.yexp_restr]),columns=ycol)
+        self.yexp_restr_df=pd.DataFrame(np.array([self.yexp_restr]),columns=ycol)
+
+
+        if fullprint: plt.plot(solve_summ)
+        if fullprint: plt.xlabel(u'Шаг решения')
+        if fullprint: plt.ylabel(u'Сумма квадратов нормы вектор-функции')
+        if fullprint: plt.yscale('log')
+        if fullprint: plt.show()
+        if fullprint: otchet_func(self.deltasol)
+        return dsalscp['x'] #решение методом наименьших квадратов
+
+class SolveJac_mass:
+    u"""Класс решающий массив якобианов"""
+    def __init__(self,jac,yexp_mass,index,arch_var_deviation=arch_var_deviation,x0m=x0m,y0m=y0m,yexpvar=yexpvar,mod_coef=mod_coef,mod_coef_delta_m=mod_coef_delta_m):
+        #-------------
+        #old block
+        self.jac=jac
+        self.arch_var_deviation=arch_var_deviation
+        self.x0m=x0m
+        self.y0m=y0m #начальное значение
+        self.yexpvar=yexpvar
+        self.mod_coef=mod_coef
+        self.mod_coef_delta_m=mod_coef_delta_m
+        self.yexperr=np.array([arch_var_deviation[ee] for ee in yexpvar])
+        self.jac_mas=jac_2_matrix(jac) #jac в нпмассиве
+        self.yexp_mass=yexp_mass #NEW
+        self.JT_restr=restrict_JAC(self.jac_mas)
+        self.jac_df=pd.DataFrame(jac)
+        #self.jac_df_norm=(self.jac_df.T/pd.Series(arch_var_deviation)).T #нормированный якобиан
+        #self.jac_mas_norm=jac_2_matrix(self.jac_df_norm) #нормированный якобиан в матрице
+        #self.jac_mas_norm_restr=restrict_JAC(self.jac_mas_norm) #нормированный якобиан c ограничением в матрице
+        #self.yexp_restr=restrict_yexp(self.yexp,self.jac_mas_norm_restr) #добавляем нули в массив значений архива для соответсвия размерности
+        #self.y0_restr=restrict_y0(y0m,self.jac_mas_norm_restr) #добавляем нули для размерности начального значения функции
+        #self.yexperr_restr=restrict_yexperr(self.yexperr,self.jac_mas_norm_restr) #добавляем 1 для размерности ошибки
+        #--------------------
+        SJ=[]
+        attrs=['xsol_df','ysol_df','ysol_delta_df','yexp_restr_df']#'bounds','solve_summ','deltasol','ysol','ysol_temp','xsol',
+        for y in yexp_mass:
+            SJ.append(SolveJac(jac,y))
+            SJ[-1].math_solve()
+        print 'create trans'
+        for a in attrs:
+            self.trans_df(SJ,a,index)
+
+    def trans_df(self,df,att,index):
+        u"""
+        обращаем лист датафреймов в датафрейм большой
+        """
+        dfb=[getattr(dfi,att) for dfi in df]
+        dfbb=pd.concat(dfb,ignore_index=True)
+        dfbb.index=index
+        setattr(self,att,dfbb)
+        #return dfbb
+
+
+
+
+def try_clss():
+    u"""пробуем класс"""
+
+    u"""точки с отключенным ПВД отбрасываем"""
+    pd.options.display.max_rows = 40
+    pd.options.display.max_columns=60
+    zz=store['alldata'].copy()
+    zz['int_ind'] = list(range(len(store['alldata'])))
+    zz[zz['tpvd2_r']>205]['int_ind'].iloc[range(0,len(zz[zz['tpvd2_r']>205]['int_ind']),10)].values
+    solvepointsm=zz[zz['tpvd2_r']>205]['int_ind'].iloc[range(0,len(zz[zz['tpvd2_r']>205]['int_ind']),10)].values
+    data_cut=zz.iloc[solvepointsm]
+    #try new
+    yexpm=[]
+    for spoi in solvepointsm:
+        put_data_fileh5_model(spoi)
+        #print spoi,v['OG_T_pvd1'],v['OG_T_pvd2']
+        ymas,q=y_fr_model()
+        yexpm.append(ymas)
+    yexpm=np.array(yexpm)
+    yexpm_df=pd.DataFrame(yexpm,columns=yexpvar)
+    SJM=SolveJac_mass(jac,yexpm,index=data_cut.index)
+    pd.options.display.max_rows = 15
+    pd.options.display.max_columns=60
+    nte=N_calc(**SJM.ysol_df) #расчет после уточнения по формулам
+    nnp=N_Npp(**data_cut) # расчет по базе
+
+    (nte.N1k_-nte.N2k_).describe()
+
+    data_cut['tgorp1_sr'].plot()
+    ytemp=pd.Series(yexpm.T[-2],index=data_cut.index)
+    ytemp.plot()
+
+    SJM.ysol_df['Tgor1'].plot();plt.show()
+
+    def nteplt(n,natr,name,color,lrange=5,err=200):
+        u"""строим график """
+        np=getattr(n,natr)
+        np.name=name
+        np.plot(legend=True,color=color,style='+-')
+        plt.errorbar(np.iloc[range(lrange,np.shape[0],20)].index,np.iloc[range(lrange,np.shape[0],20)].values,err,marker='o',ls='none',color=color)
+
+    nteplt(nte,'N1k_',u'n1k solution','red',lrange=14,err=50)
+    nteplt(nte,'N2k_',u'n2k solution','blue',lrange=5,err=50)
+
+    nteplt(nnp,'N1k_',u'n1k base','cyan',lrange=9,err=260)
+    nteplt(nnp,'N2k_',u'n2k base','yellow',lrange=9,err=260)
+
+    plt.show()
+
+    for k in yexpvar:
+        SJM.yexp_restr_df[k].plot(style='+')
+        SJM.ysol_df[k].plot(legend=True)
+        plt.show()
+
+    #std before and after solve in base
+
+    for i,k in enumerate(yexpvar):
+        print k,yexpm.T[i].std()*100/yexpm.T[i].mean(),SJM.ysol_df[k].std()*100/SJM.ysol_df[k].mean()
+
+
+
+
+    print nnp.N1k_[[0,-1]],nte.N1k_[[0,-1]]
+    nish=N_calc(**SJM.yexp_restr_df.ix[0])
+    nish2=N_calc(**SJM.yexp_restr_df.ix[-1])
+    nn1=N_calc(**yexpm_df.ix[0])
+    nn2=N_calc(**yexpm_df.ix[292])
+    print 'calc yexp','calc solve','npp base','calc class restr'
+    print nn1.N1k_,nte.N1k_[0],nnp.N1k_[0],nish.N1k_
+    print nn2.N1k_,nte.N1k_[-1],nnp.N1k_[-1],nish2.N1k_
+
+    print 'diff exp calc Npetl1'
+    print nn1.N1kp1_,nte.N1kp1_[0]
+    print nn2.N1kp1_,nte.N1kp1_[-1]
+    print nn1.N1kp1_-nn2.N1kp1_,nte.N1kp1_[0]-nte.N1kp1_[-1]
+
+
+
+    for k in yexpvar:
+        print k,yexpm_df.ix[0][k],SJM.ysol_df[k].ix[0],yexpm_df.ix[0][k]-SJM.ysol_df[k].ix[0]
+        print k,yexpm_df.ix[292][k],SJM.ysol_df[k].ix[292],yexpm_df.ix[292][k]-SJM.ysol_df[k].ix[292]
+        print k,yexpm_df.ix[0][k]-yexpm_df.ix[292][k],SJM.ysol_df[k].ix[0]-SJM.ysol_df[k].ix[292]
+        print '___'
+
+    #NEW блок расчета для случайного возмущения
+
+    y_rand=[]
+    for iy,y in enumerate(yexpvar):
+        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],10000)
+        y_rand.append(tempmas)
+    y_rand=np.array(y_rand)
+    y_rand_df=pd.DataFrame(y_rand.T,columns=yexpvar)
+
+    SJMR=SolveJac_mass(jac,y_rand.T,index=y_rand_df.index)
+
+    def rand_plot(y='Tgor1'):
+        u"""hist plot """
+        #fig = plt.figure()
+        bmin=min(SJMR.yexp_restr_df[y].min(),SJMR.ysol_df[y].min())
+        bmax=max(SJMR.yexp_restr_df[y].max(),SJMR.ysol_df[y].max())
+        dft=pd.DataFrame({u'Распределение после решения задачи':SJMR.ysol_df[y],u'Исходное распределение':SJMR.yexp_restr_df[y]})
+        po=dft.plot.hist(bins=np.linspace(bmin,bmax,100))
+        fig = po.get_figure()
+        plt.xlabel(yexpvar_lable[y],fontsize=16)
+        plt.ylabel(u'Частоста',fontsize=14)
+        #SJMR.yexp_restr_df[y].plot.hist(bins=np.linspace(bmin,bmax,100))
+        #SJMR.ysol_df[y].plot.hist(bins=np.linspace(bmin,bmax,100))
+        return fig
+    for y in yexpvar:
+        u"""отображаем разницу погрешностей по всем переменным"""
+        #fig=plt.figure()
+        fig=rand_plot(y)
+        fig.savefig(dirofdis+'plt_erraftersol/'+y+'.png')
+        plt.close(fig)
+        #plt.show()
+
+    SJMR.ysol_df.std()*100/SJMR.ysol_df.mean() #погрешности новые всех перменных в %
+
+    nsol_rand=N_calc(**SJMR.ysol_df)
+    n_rand_ishod=N_calc(**y_rand_df)
+
+    print nsol_rand.N1k_.std(),nsol_rand.N2k_.std(),nsol_rand.N2kpvd_.std(),nsol_rand.Nall_.std()
+    print n_rand_ishod.N1k_.std(),n_rand_ishod.N2k_.std(),n_rand_ishod.N2kpvd_.std(),n_rand_ishod.Nall_.std()
+
+    test=N_calc(**y_from_model_dict)
+
+    #old
+    yexp,q=y_fr_model()
+    SJ=SolveJac(jac,yexp)
+    #SJ.matrix_solve()
+    SJ.math_solve()
+    SJ.deltasol
+    SJ.xsol_df
+    pd.options.display.max_rows = 15
+    pd.options.display.max_columns=60
+    nte=N_calc(**SJ.ysol_df)
+
+    #блок для расчета по базе
+
+    u"""точки с отключенным ПВД отбрасываем"""
+    zz=store['alldata'].copy()
+    zz['int_ind'] = list(range(len(store['alldata'])))
+    zz[zz['tpvd2_r']>205]['int_ind'].iloc[range(0,len(zz[zz['tpvd2_r']>205]['int_ind']),10)].values
+    solvepointsm=zz[zz['tpvd2_r']>205]['int_ind'].iloc[range(0,len(zz[zz['tpvd2_r']>205]['int_ind']),10)].values
+    data_cut=zz.iloc[solvepointsm]
+
+
+
+    tgorp1name=['tgorp1_sr','tgorp1_s5dtc','tgorp1_s4da','tgorp1_s4db','tgorp1_s4dc','tgorp1_s3da','tgorp1_s3db','tgorp1_s3dc','tgorp1_s2da','tgorp1_s2db','tgorp1_s1da','tgorp1_s1db','tgorp1_s1dc']
+
+
+    #блок расчета для случайного возмущения
+    y_new=[]
+    for iy,y in enumerate(yexpvar):
+        tempmas=np.random.normal(y_from_model_mas[iy],arch_var_deviation[y],10000)
+        y_new.append(tempmas)
+    y_new=np.array(y_new)
+    y_new_df=pd.DataFrame(y_new.T,columns=yexpvar)
+    sjm=[]
+    for i in range(y_new.shape[1]):
+        ynn=y_new[:,i]
+        sjm.append(SolveJac(jac,ynn))
+        sjm[-1].math_solve()
+
+    ysol_rand_df=pd.DataFrame([])
+    yexp_rand_df=pd.DataFrame([])
+    xsol_rand_df=pd.DataFrame([])
+    for s in sjm:
+        ysol_rand_df=ysol_rand_df.append(s.ysol_df,ignore_index=True)
+        yexp_rand_df=yexp_rand_df.append(s.yexp_restr_df,ignore_index=True)
+        xsol_rand_df=xsol_rand_df.append(s.xsol_df,ignore_index=True)
+    for y in yexpvar:
+        u"""отображаем разницу погрешностей по всем переменным"""
+        #y='Pgpk'
+        dftholq=pd.DataFrame({'solve':ysol_rand_df[y].values,'rand':yexp_rand_df[y].values})
+        #dftholq.plot()
+        pp=dftholq.plot.hist(bins=100)
+        plt.xlabel(yexpvar_lable[y],fontsize=16)
+        plt.show()
+
+    Nc_exp_rand=N_calc(**yexp_rand_df)
+    Nc_sol_rand=N_calc(**ysol_rand_df)
+    n1e=Nc_exp_rand.N1k()
+    n1s=Nc_sol_rand.N1k()
+    n2e=Nc_exp_rand.N2k()
+    n2s=Nc_sol_rand.N2k()
+    print n1e.std(),n1s.std()
+    print n1e.std()/n1e.mean(),n1s.std()/n1s.mean()
+    print n2e.std(),n2s.std()
+    print n2e.std()/n2e.mean(),n2s.std()/n2s.mean()
+    ysol_rand_df['N2k'].std()
+
 
 
 def lsqmas(fullprint=False):
@@ -956,7 +1112,7 @@ def lsqmas(fullprint=False):
     dx0.fill(0.1)
     s_sum=[]
     shag=1
-    y_from_model_mas=y_fr_model() # для ускорения считаем только 1 раз
+    y_from_model_mas,q=y_fr_model() # для ускорения считаем только 1 раз
     #ssnp=np.linalg.lstsq(mas.T,yexp1-y0m) #решение
     #ssfort=scipy.optimize.nnls(mas.T,yexp1-y0m)
     #sslsqscypy=scipy.optimize.leastsq(funk_fr_jac,mod_coef_delt)#np.array([inp_data.iloc[0][x] for x in mod_coef])
@@ -1003,7 +1159,15 @@ def solve_throught_arch():
     """
     global y0m
     jac,x0masfit=all_JAC()
-    solvepointsm=range(0,1710,10)
+    jac[u'Nin']['Pzone1']=0 #убираем ошибку якоб
+    #for j in jac[u'rot_coef']:
+    #    jac[u'rot_coef'][j]=0 #неправильно считаем закрутку, пока зануляем
+    u"""точки с отключенным ПВД отбрасываем"""
+    zz=store['alldata'].copy()
+    zz['int_ind'] = list(range(len(store['alldata'])))
+    zz[zz['tpvd2_r']>205]['int_ind'].iloc[range(0,len(zz[zz['tpvd2_r']>205]['int_ind']),10)].values
+    #solvepointsm=range(0,1710,10)
+    solvepointsm=zz[zz['tpvd2_r']>205]['int_ind'].iloc[range(0,len(zz[zz['tpvd2_r']>205]['int_ind']),10)].values
     solvemass=[]
     ysolmas=[]
     startobrsolve = time.time()
@@ -1018,8 +1182,8 @@ def solve_throught_arch():
     y0_restr=restrict_y0(y0m,JT_restr)
     for spoi in solvepointsm:
         put_data_fileh5_model(spoi)
-        print v['OG_T_pvd1'],v['OG_T_pvd2']
-        yexp1=y_fr_model()
+        print spoi,v['OG_T_pvd1'],v['OG_T_pvd2']
+        yexp1,q=y_fr_model()
         yexp1_restr=restrict_yexp(yexp1,JT_restr)
         sol=newton_gauss(JT_restr,yexp1_restr,y0_restr,yexperr_restr,fullprint=False)
         solvemass.append(sol) #составляем массив решений задачи идя через архив
@@ -1034,26 +1198,30 @@ def solve_throught_arch():
     #otchet:
     ysolnpm=np.array(ysolmas)
     #plt.plot(ysolnpm.T[0])
+    lcol=list(mod_coef)
+    lcol.append(u'pgpopr')
+    soldf=pd.DataFrame(np.array(solvemass),columns=lcol)
 
     #__
     #grapf raznie
-    store['alldata'].iloc[range(0,1710,10)][['tgorp1_sr','tgorp2_sr','tgorp3_sr','tgorp4_sr']].plot()
-    store['alldata'].iloc[range(0,1710,10)][['tholp1_sr','tholp2_sr','tholp3_sr','tholp4_sr']].plot()
-    store['alldata'].iloc[range(0,1710,10)][['ppgcn1','ppgcn2','ppgcn3','ppgcn4']].plot()
-    store['alldata'].iloc[range(0,1710,10)][['tpitvpg1','tpitvpg2','tpitvpg3','tpitvpg4']].plot()
-    store['alldata'].iloc[range(0,1710,10)][['ppitv1','ppitv2','ppitv3','ppitv4']].plot()
-    store['alldata'].iloc[range(0,1710,10)][['nedgcn1','nedgcn2','nedgcn3','nedgcn4']].plot()
-    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn1'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn1'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp1_sr']+273.15)).plot()
-    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn2'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn2'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp2_sr']+273.15)).plot()
-    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn3'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn3'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp3_sr']+273.15)).plot()
-    Gcnf(3,1,store['alldata'].iloc[range(0,1710,10)]['ppgcn4'],store['alldata'].iloc[range(0,1710,10)]['fpitgcn4'],vec_steam_pTrho(store['alldata'].iloc[range(0,1710,10)]['preak']*10**6,store['alldata'].iloc[range(0,1710,10)]['tholp4_sr']+273.15)).plot()
+    store['alldata'].iloc[solvepointsm][['tgorp1_sr','tgorp2_sr','tgorp3_sr','tgorp4_sr']].plot()
+    store['alldata'].iloc[solvepointsm][['tholp1_sr','tholp2_sr','tholp3_sr','tholp4_sr']].plot()
+    store['alldata'].iloc[solvepointsm][['ppgcn1','ppgcn2','ppgcn3','ppgcn4']].plot()
+    store['alldata'].iloc[solvepointsm][['tpitvpg1','tpitvpg2','tpitvpg3','tpitvpg4']].plot()
+    store['alldata'].iloc[solvepointsm][['ppitv1','ppitv2','ppitv3','ppitv4']].plot()
+    store['alldata'].iloc[solvepointsm][['nedgcn1','nedgcn2','nedgcn3','nedgcn4']].plot()
+    store['alldata'].iloc[solvepointsm][['fpvd1m','fpvd2m']].plot()
+    Gcnf(3,1,store['alldata'].iloc[solvepointsm]['ppgcn1'],store['alldata'].iloc[solvepointsm]['fpitgcn1'],vec_steam_pTrho(store['alldata'].iloc[solvepointsm]['preak']*10**6,store['alldata'].iloc[solvepointsm]['tholp1_sr']+273.15)).plot()
+    Gcnf(3,1,store['alldata'].iloc[solvepointsm]['ppgcn2'],store['alldata'].iloc[solvepointsm]['fpitgcn2'],vec_steam_pTrho(store['alldata'].iloc[solvepointsm]['preak']*10**6,store['alldata'].iloc[solvepointsm]['tholp2_sr']+273.15)).plot()
+    Gcnf(3,1,store['alldata'].iloc[solvepointsm]['ppgcn3'],store['alldata'].iloc[solvepointsm]['fpitgcn3'],vec_steam_pTrho(store['alldata'].iloc[solvepointsm]['preak']*10**6,store['alldata'].iloc[solvepointsm]['tholp3_sr']+273.15)).plot()
+    Gcnf(3,1,store['alldata'].iloc[solvepointsm]['ppgcn4'],store['alldata'].iloc[solvepointsm]['fpitgcn4'],vec_steam_pTrho(store['alldata'].iloc[solvepointsm]['preak']*10**6,store['alldata'].iloc[solvepointsm]['tholp4_sr']+273.15)).plot()
     plt.show()
     #__
     #
     #график температуры
     #for pp in solvepointsm:
-    yexp_te=store['alldata'].iloc[range(0,1700,10)]['tgorp1_sr']
-    ysol_df=pd.DataFrame(ysolnpm.T[0],store['alldata'].iloc[range(0,1700,10)].index,columns=[u'Решение обратной задачи']) #прикручиваем временные индексы, длина  массива - 171, первые 171 значений с шагом - 10
+    yexp_te=store['alldata'].iloc[solvepointsm]['tgorp1_sr']
+    ysol_df=pd.DataFrame(ysolnpm.T[0],store['alldata'].iloc[solvepointsm].index,columns=[u'Решение обратной задачи']) #прикручиваем временные индексы, длина  массива - 171, первые 171 значений с шагом - 10
     yexp_te.name=u'Эксперимент'
     ysol_df.plot()
     #ysol_df.iloc[range(0,ysol_df.shape[0],10)].plot(yerr=3,style='+')
@@ -1080,12 +1248,12 @@ def solve_throught_arch():
         последовательность архива:
         0'Tgor1',1'Tgor2',2'Tgor3',3'Tgor4',4'Thol1',5'Thol2',6'Thol3',7'Thol4',8'dPgcn1',9'dPgcn2',10'dPgcn3',11'dPgcn4',
         12'Pzone1',13'Pzone2','14Ntep','15Naz','16Nrr','17N1k','N2k','Naknp','Nturb','Tpv1','Tpv2','Tpv3','Tpv4','Gpv1','Gpv2','Gpv3','Gpv4',
-        'Ppg1','Ppg2','Ppg3','Ppg4','Pgpk','tpvd1','tpvd2','ppvd1','ppvd2','gpvd1','gpvd2','ppv1','ppv2','ppv3','ppv4','gkgtn'
+        'Ppg1','Ppg2','Ppg3','Ppg4','Pgpk','tpvd1','tpvd2','ppvd1','ppvd2','gpvd1','gpvd2','ppv1','ppv2','ppv3','ppv4','gkgtn',Gp1,Gp2,Gp3,Gp4
         """
-        N1kp1=N1kp(data[12]/10.197,data[0],data[12]/10.197,data[4],data[8]/10.197,50.,0*1000)
-        N1kp2=N1kp(data[12]/10.197,data[1],data[12]/10.197,data[5],data[9]/10.197,50.,0*1000)
-        N1kp3=N1kp(data[12]/10.197,data[2],data[12]/10.197,data[6],data[10]/10.197,50.,0*1000)
-        N1kp4=N1kp(data[12]/10.197,data[3],data[12]/10.197,data[7],data[11]/10.197,50.,0*1000)
+        N1kp1=N1kp(data[12]/10.197,data[0],data[12]/10.197,data[4],data[45]*3600/10**6,0*1000)
+        N1kp2=N1kp(data[12]/10.197,data[1],data[12]/10.197,data[5],data[46]*3600/10**6,0*1000)
+        N1kp3=N1kp(data[12]/10.197,data[2],data[12]/10.197,data[6],data[47]*3600/10**6,0*1000)
+        N1kp4=N1kp(data[12]/10.197,data[3],data[12]/10.197,data[7],data[48]*3600/10**6,0*1000)
         N1k=N1kp1+N1kp2+N1kp3+N1kp4
         return N1k
 
@@ -1133,7 +1301,7 @@ def solve_throught_arch():
     yexp_te.name=u"my rasschet"
     yexp_teo.plot(legend=True,style='-o')
     yexp_te.plot(legend=True,style='-o')
-    yexp_teocalc=store['alldata'].iloc[range(0,1710,10)]['N1kcalc']
+    yexp_teocalc=store['alldata'].iloc[solvepointsm]['N1kcalc']
     yexp_teocalc.name=u'BASE_calc'
     yexp_teocalc.plot(legend=True,style='-o')
     plt.show()
@@ -1143,14 +1311,14 @@ def solve_throught_arch():
     #__
     #N1k
     #calc_N_man(*ysolnpm.T) # массив расчитанной мощности по 1к после реш задачи
-    #N1k(**store['alldata'].iloc[range(0,1710,10)]) #массив рассчитанной мощности по 1к по эксперим данным
+    #N1k(**store['alldata'].iloc[solvepointsm]) #массив рассчитанной мощности по 1к по эксперим данным
 
 
 
-    yexp_te=N1k(**store['alldata'].iloc[range(0,1710,10)])
-    #ysol_df=pd.DataFrame(ysolnpm.T[14],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи ста'])
-    ysol_df=pd.DataFrame(calc_N_man(*ysolnpm.T),store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Решение обратной задачи'])
-    ysol_df_native=pd.DataFrame(ysolnpm.T[17],store['alldata'].iloc[range(0,1710,10)].index,columns=[u'n1ksolvejac'])
+    yexp_te=N1k(**store['alldata'].iloc[solvepointsm])
+    #ysol_df=pd.DataFrame(ysolnpm.T[14],store['alldata'].iloc[solvepointsm].index,columns=[u'Решение обратной задачи ста'])
+    ysol_df=pd.DataFrame(calc_N_man(*ysolnpm.T),store['alldata'].iloc[solvepointsm].index,columns=[u'Решение обратной задачи'])
+    ysol_df_native=pd.DataFrame(ysolnpm.T[17],store['alldata'].iloc[solvepointsm].index,columns=[u'n1ksolvejac'])
     yexp_te.name=u'Расчет по станционным данным'
     ysol_df.plot(legend=True,style=':+')
     ysol_df_native[u'n1ksolvejac'].plot(legend=True,style='-+')
@@ -1182,10 +1350,10 @@ def solve_throught_arch():
         N2k=Npg1+Npg2+Npg3+Npg4
         return N2k
 
-    n2k_npp=N2k(**store['alldata'].iloc[range(0,1710,10)])
+    n2k_npp=N2k(**store['alldata'].iloc[solvepointsm])
     n2k_npp.name=u'Расчет по станционным данным'
-    #store['alldata'].iloc[range(0,1710,10)]['Npg'].plot(style='-o')
-    n2k_sol=pd.DataFrame(calc_N2k_man(*ysolnpm.T),store['alldata'].iloc[range(0,1710,10)].index,columns=[u'N2k-solve'])
+    #store['alldata'].iloc[solvepointsm]['Npg'].plot(style='-o')
+    n2k_sol=pd.DataFrame(calc_N2k_man(*ysolnpm.T),store['alldata'].iloc[solvepointsm].index,columns=[u'N2k-solve'])
     n2k_sol[u'N2k-solve'].plot(legend=True,style='-+')
     n2k_npp.plot(legend=True,style='--+')
     plt.xlabel(u"Время в архиве",fontsize=16)
@@ -1211,11 +1379,11 @@ def solve_throught_arch():
         N2kpvd=Npvd1+Npvd2
         return N2kpvd
 
-    npvd_npp=N2kpvd(**store['alldata'].iloc[range(0,1710,10)])
+    npvd_npp=N2kpvd(**store['alldata'].iloc[solvepointsm])
     npvd_npp.name=u'Npvd npp-data-calc'
     npvd_npp.plot(legend=True,style='-+')
 
-    npvd_sol=pd.DataFrame(calc_N2kpvd_man(*ysolnpm.T),store['alldata'].iloc[range(0,1710,10)].index,columns=[u'Npvd-solve'])
+    npvd_sol=pd.DataFrame(calc_N2kpvd_man(*ysolnpm.T),store['alldata'].iloc[solvepointsm].index,columns=[u'Npvd-solve'])
     npvd_sol[u'Npvd-solve'].plot(legend=True,style='-+')
     plt.show()
 
@@ -1236,7 +1404,7 @@ def solve_throught_arch():
 
     Nall_npp=0.3*yexp_te +0.5*n2k_npp +0.2*npvd_npp
     Nall_npp.name=u'Nall 03 05 02'
-    Nall_npp.plot(color='yellow')
+    Nall_npp.plot(legend=True,color='yellow')
 
     plt.show()
 
@@ -1276,9 +1444,9 @@ def search_derive_solver():
         ##tempmas=np.random.normal(v.OG_T_pvd1,arch_var_deviation['tpvd1'],10)
         solvemass=[]
         for tpar in tempmas:
-            y_from_model_mas=y_fr_model() #берем решение из модели
+            y_from_model_mas,q=y_fr_model() #берем решение из модели
             y_from_model_mas[iy]=tpar #кладем туда возмущенные параметры
-            solvemass.append(newton_gauss(fullprint=False))
+            solvemass.append(newton_gauss(JT_restr,yexp1_restr,y0_restr,yexperr_restr,fullprint=False))
         solvedf=pd.DataFrame(solvemass,tempmas) #массив решений dx
         solvedf.index.name=y
         ysolvemass=[]
@@ -1352,13 +1520,14 @@ def search_derive_solver():
         print iy,y,arch_var_deviation[y]*100./y_from_model_mas[iy]
         print ysolvedfall[y].std()*100./ysolvedfall[y].mean()
     '''
+    u"""!!!!!!!!!!!!!!!!"""
     #шумим не по одной переменной, а всеми разом
     startobrsolvef = time.time()
     u"""создаем массив значений вокруг эксперимент точки на которую натягиваем модель, массив со стандартным отклонением по погрешности"""
     solvedfall={}
     ysolvedfall={}
-    y_from_model_mas=y_fr_model()
-    y_from_model_mas_o=y_fr_model()
+    y_from_model_mas,q=y_fr_model()
+    y_from_model_mas_o,q=y_fr_model()
     y_new=[]
     for iy,y in enumerate(yexpvar):
         #print iy,y,y_from_model_mas[iy],arch_var_deviation[y]
@@ -1370,10 +1539,12 @@ def search_derive_solver():
         #y_from_model_mas=y_fr_model()
         y_new.append(tempmas)
     y_new=np.array(y_new)
+    y_new_df=pd.DataFrame(y_new.T,columns=yexpvar)
     solvemass=[]
     for i in range(y_new.shape[1]):
         y_from_model_mas=y_new[:,i]
-        solvemass.append(newton_gauss(fullprint=False))
+        yexp1_restr=restrict_yexp(y_from_model_mas,JT_restr)
+        solvemass.append(newton_gauss(JT_restr,yexp1_restr,y0_restr,yexperr_restr,fullprint=False))
     solvedf=pd.DataFrame(solvemass) #массив решений dx
     ysolvemass=[]
     for sspoi in solvemass:
@@ -1381,8 +1552,8 @@ def search_derive_solver():
         #xsol=dx2x(normolizeX_ob(dxsol[:-1]))
         #xsolb,rrrrrr=boundX(xsol,fullprint=False)
         #ysol=y00+np.dot(mas.T,xsolb-x00)
-        ysol=func_by_delt(dxsol)
-        ysolvemass.append(ysol)
+        ysol=func_by_delt(dxsol,JT_restr,y0_restr)
+        #ysolvemass.append(ysol)
         ysolvemass.append(ysol)
     yexpvarpsev=list(yexpvar)
     yexpvarpsev.extend(['psev1_1','psev1_2','psev1_3','psev2_1','psev2_2','psev2_3','psev3_1','psev3_2','psev3_3'])
@@ -1393,11 +1564,50 @@ def search_derive_solver():
     print u"Скорость выполенения всего: ",(finishobrsolvef - startobrsolvef)/60.,u" минут"
     #print u"число шагов",shag
     print '____________________________________________________'
+    fig, (ax0, ax1) = plt.subplots(ncols=2, figsize=(8, 4))
     ysolvedf['N1k'].hist(bins=40)
     plt.xlabel(yexpvar_lable[u"N1k"],fontsize=16)
+    #plt.show()
+    ysolvedf['Thol1'].plot.hist(bins=40)
+    plt.xlabel(yexpvar_lable[u"Thol1"],fontsize=16)
     plt.show()
+    y_new_df['Pzone1'].plot.hist(bins=40)
+    plt.xlabel(yexpvar_lable[u"Pzone1"],fontsize=16)
+    plt.show()
+
+    for y in yexpvar:
+        u"""отображаем разницу погрешностей по всем переменным"""
+        #y='Pgpk'
+        dftholq=pd.DataFrame({'solve':ysolvedf[y].values,'rand':y_new_df[y].values})
+        #dftholq.plot()
+        pp=dftholq.plot.hist(bins=100)
+        plt.xlabel(yexpvar_lable[y],fontsize=16)
+        plt.show()
+    print ysolvedf['Pgpk'].std(),y_new_df['Pgpk'].std()
+    #пересчет стд руками -ok
+    dd=ysolvedf['Pgpk']
+    print dd.std()
+    drel=dd-dd.mean()
+    abs(drel).mean()
+    (drel**2).mean()
+    #Ppoppr
+    solvedf[22].describe()
+    solvedf[22].plot.hist(bins=40,color='cyan')
+    (-64.45+ysolvedf['Pgpk']).plot.hist(bins=40);plt.show()
+    plt.show()
+    #pgpk+ppopr
+    ysolvedf['Pgpk'].plot.hist(bins=40,color='red')
+    (solvedf[22]+ysolvedf['Pgpk']).plot.hist(bins=40);plt.show()
+
+
+
+
     for iy,y in enumerate(yexpvar):
         print '{0:2d} {1:7s} {2:7.3f} {3:7.3f}'.format(iy, y, ysolvedf[y].std(),arch_var_deviation[y]) # {1} {5.3f} {45.3f}
+    my_N_sol=N_calc(**ysolvedf)
+    my_N_sol.N1k().hist(bins=20);plt.show()
+    N_npp0=N_Npp(**store['alldata'])
+    print N_npp0.N1k()
     #solvedfall[y]=solvedf
     #ysolvedfall[y]=ysolvedf
         #solvemass.append(lsqmas(fullprint=False))

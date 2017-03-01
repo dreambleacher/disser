@@ -17,17 +17,22 @@ import locale
 from obrguess.model_drive import *
 from obrguess.set2k import *
 import numdifftools as nd
+import os
 
 rc('font', **{'family': 'verdana'})
 rc('text.latex', unicode=True)
 rc('text.latex', preamble='\usepackage[utf8]{inputenc}')
 rc('text.latex', preamble='\usepackage[russian]{babel}')
 
-try:
-    dir2='D:/work_place/serg/#b3-svbu/'
-    store = pd.HDFStore(dir2+'store.h5')
-except IOError:
-    print u'Нет доступа к директории ',dir2
+#try:
+#    dir2='D:/work_place/serg/#b3-svbu/'
+
+if os.environ['COMPUTERNAME']=='ORTHOMISSION':
+    try:
+        dir2='C:/_git_py/reconcilliation/py/'
+        store = pd.HDFStore(dir2+'store.h5')
+    except IOError:
+        print u'Нет доступа к директории ',dir2
 
 def out_param():
     u"""Возвращает словарь переменных модели"""
@@ -65,9 +70,10 @@ def out_model_coef():
     SG_CfResL2=v[u'SG_CfResL2'],
     SG_CfResL3=v[u'SG_CfResL3'],
     SG_CfResL4=v[u'SG_CfResL4'],
-    YhqCor1_eqf=v[u'YhqCor1_eqf'],
-    YhqCor2_eqf=v[u'YhqCor2_eqf'],
-    YhqCor3_eqf=v[u'YhqCor3_eqf'],
+    rot_coef=v[u'rot_coef'],
+    #YhqCor1_eqf=v[u'YhqCor1_eqf'],
+    #YhqCor2_eqf=v[u'YhqCor2_eqf'],
+    #YhqCor3_eqf=v[u'YhqCor3_eqf'],
     Nin=v[u'YMINTPOW_SET'],
     Pgpkin=v[u'asut02oint1'],
     Tpvdain=v[u'PVDAT'],
@@ -107,10 +113,12 @@ def put_data_fileh5_model(pos):
     v.OG_T_gor=store['alldata'].iloc[pos][['tgorp1_sr','tgorp2_sr','tgorp3_sr','tgorp4_sr']]#tgor
     v.OG_T_hol=store['alldata'].iloc[pos][['tholp1_sr','tholp2_sr','tholp3_sr','tholp4_sr']]#thol
     v.OG_pp_gcn=store['alldata'].iloc[pos][['ppgcn1','ppgcn2','ppgcn3','ppgcn4']]*10.197#dpgcn
+    v.OG_Gp_kgs=store['alldata'].iloc[pos][['fpetl1','fpetl2','fpetl3','fpetl4']]*10**6/3600 #расход через петлю, кг/с
+
     v.OG_p_rea=store['alldata']['preak'][pos]*10.197#pzon
     v.OG_t_pitv=store['alldata'].iloc[pos][['tpitvpg1','tpitvpg2','tpitvpg3','tpitvpg4']]#tpv
     v.OG_g_pitv=store['alldata'].iloc[pos][['fpitv1','fpitv2','fpitv3','fpitv4']]#gpv
-    v.OG_p_pitvg=store['alldata'].iloc[pos][['ppitv1','ppitv2','ppitv3','ppitv4']]#ppv
+    v.OG_p_pitvg=store['alldata'].iloc[pos][['ppitv1','ppitv2','ppitv3','ppitv4']]*10.197#ppv
     v.OG_p_pg=store['alldata'].iloc[pos][['ppg1','ppg2','ppg3','ppg4']]*10.197#ppg
     v.OG_T_pvd1=store['alldata']['tpvd1_r'][pos]#T pvd1
     v.OG_T_pvd2=store['alldata']['tpvd2_r'][pos]#T pvd2
@@ -232,12 +240,12 @@ def set_m_st(qqq):
         print u"есть... Релаксируем...",
         RelaxByVar(u"M122")
         print u"есть"
-    if v.Ustavka_Pzone!=Paz or v.RegPodChast_ON==False:
+    if v.Ustavka_Pzone!=Paz or v.RegPodChast_ON==False or abs(v.Y065B022-Paz)>0.025:
         print u'Устанавливаем давление в АЗ=',Paz,"\t",
         v.Ustavka_Pzone=Paz
         v.RegPodChast_ON=True
         print u"есть... Релаксируем...",
-        RelaxByVar(u"Y065B022")
+        RelaxByVar(u"Y065B022",size=50,std=0.009) #не релаксирует - переписали, проверить
         print u"есть"
     print u"Укачиваем...",
     RelaxDTDT(statmode=True)

@@ -12,6 +12,7 @@
 #-------------------------------------------------------------------------------
 
 from knpp_b3_hdf5_model import *
+from def_vars import *
 
 u"""
 разделим переменные, которые используем в модели
@@ -28,14 +29,14 @@ res KGT (мильен сопротивлений кгтна)
 out_model_coef()
 """
 
-dirofcalc='G:/git_disser/disser/'
+dirofcalc='C:/_git_py/calc_nout_new/'
 #dirofcalc='D:/git_py/' #work
 
 def create_net_coef():
     u"""
     создаем сеточку параметров модели для расчета якобиана
     """
-    q_mc=10 #число разбиения отрезка параметров
+    q_mc=11 #число разбиения отрезка параметров
     mod_coef_net={}
     for m_c in mod_coef:
         mod_delta = mod_coef_delta[m_c][1] - mod_coef_delta[m_c][0]
@@ -46,7 +47,7 @@ def create_net_vhod():
     u"""
     создаем сеточку входов модели для расчета якобиана
     """
-    q_mc=10 #число разбиения отрезка параметров
+    q_mc=11 #число разбиения отрезка параметров
     mod_vhod_net={}
     for v_c in vh_param:
         mod_delta = vh_delt[v_c][1] - vh_delt[v_c][0]
@@ -80,7 +81,38 @@ def process_linearise():
     #coef_dict=out_model_coef()#вывод параметров модели
     #запись в файл
 
-def first_run(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_by1.h5',mod_param=inp_data.iloc[0]):
+inp_data_dict={
+u'FLaSG1_CfResL':0.1,
+u'FLaSG2_CfResL':0.1,
+u'FLaSG3_CfResL':0.1,
+u'FLaSG4_CfResL':0.1,
+u'YD11D01_2_Hnom':84.5,
+u'YD12D01_2_Hnom':84.5,
+u'YD13D01_2_Hnom':84.5,
+u'YD14D01_2_Hnom':84.5,
+#u'YHSIEVE_TUN(1)':[,],
+u'Loop_CfResL1':0.3,
+u'Loop_CfResL2':0.3,
+u'Loop_CfResL3':0.3,
+u'Loop_CfResL4':0.3,
+u'SG_CfResL1':1.5,
+u'SG_CfResL2':1.5,
+u'SG_CfResL3':1.5,
+u'SG_CfResL4':1.5,
+u'rot_coef':0.,
+#u'YhqCor1_eqf':[0.,5.],
+#u'YhqCor2_eqf':[0.,5.],
+#u'YhqCor3_eqf':[0.,5.],
+u'Nin':100.,
+u'Pgpkin':60.9,
+u'Pazin':160.,
+u'Tpvdain':215.,
+u'Tpvdbin':215.
+}
+
+inp_data=pd.Series(inp_data_dict)
+
+def first_run(param_vhm=[100.,60.9,215.,215.,159.9],filename='liner_JAC_model_x0_by1.h5',mod_param=inp_data):
     'create h5 massive and save state'
     for m_c in mod_coef[:-5]:
         v[m_c]=mod_param[m_c]
@@ -95,7 +127,7 @@ def first_run(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_
     storeofd.close()
 
 
-def go_throught_net(param_vhm=[100.,60.9,215.,215.,160.],filename='liner_JAC_model_x0_by1.h5'):
+def go_throught_net(param_vhm=[100.,60.9,215.,215.,159.9],filename='liner_JAC_model_x0_by1.h5'):
     u"""
     идем по сетке
     """
